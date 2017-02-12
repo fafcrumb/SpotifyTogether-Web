@@ -2,18 +2,15 @@
 <link rel="import" href="bower_components/polymerfire/firebase-auth.html">
 <link rel="import" href="bower_components/paper-button/paper-button.html">
 
+<link rel="import" href="shared-styles.html">
+
 <dom-module id="my-login">
   <template>
 
-    <style>
+    <style include="shared-styles">
       :host {
         display: block;
       }
-
-      *[hidden] {
-        display: none !important;
-      }
-      
     </style>
     
     <firebase-auth
@@ -22,6 +19,8 @@
       provider="google"
       on-error="handleError">
     </firebase-auth>
+
+    <h1 hidden$="[[!user]]">Welcome [[user.displayName]]</h1>
     
     <paper-button raised on-tap="login" hidden$="[[user]]">Login</paper-button>
     <paper-button raised on-tap="logout" hidden$="[[!user]]">Logout</paper-button>
@@ -33,7 +32,7 @@
       is: 'my-login',
 
       properties: {
-        user: Object,
+        user: Object
       },
 
       login: function() {

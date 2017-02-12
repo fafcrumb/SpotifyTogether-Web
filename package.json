@@ -1,0 +1,24 @@
+{
+  "name": "spotify_together",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.html",
+  "dependencies": {
+    "browser-sync": "^2.18.7"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "dev": "firebase serve & npm run watch",
+    "watch": "browser-sync start --proxy localhost:5000 --files '**/*.html' "
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fafcrumb/SpotifyTogether-Web.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/fafcrumb/SpotifyTogether-Web/issues"
+  },
+  "homepage": "https://github.com/fafcrumb/SpotifyTogether-Web#readme"
+}
