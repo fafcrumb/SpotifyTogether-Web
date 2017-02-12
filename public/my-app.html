@@ -17,7 +17,9 @@
       api-key="AIzaSyBJxf-hJa7RQVBPYkdjt27yBcDj0b1tG8o">
     </firebase-app>
 
-    <my-login></my-login>
+    <h1 hidden$="[[!user]]">Welcome [[user.displayName]]</h1>
+
+    <my-login user="{{user}}"></my-login>
     
   </template>
   <script>
