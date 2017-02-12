@@ -23,6 +23,8 @@
     "paper-item": "^1.2.1",
     "paper-material": "^1.0.6",
     "iron-meta": "PolymerElements/iron-meta#^1.1.2",
-    "iron-ajax": "^1.4.3"
+    "iron-ajax": "^1.4.3",
+    "paper-icon-button": "^1.1.4",
+    "iron-icons": "^1.2.0"
   }
 }

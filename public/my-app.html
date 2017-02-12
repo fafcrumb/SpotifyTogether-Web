@@ -3,7 +3,7 @@
 <link rel="import" href="bower_components/polymerfire/firebase-app.html">
 <link rel="import" href="bower_components/polymerfire/firebase-auth.html">
 <link rel="import" href="bower_components/paper-input/paper-input.html">
-<link rel="import" href="bower_components/iron-meta/iron-meta.html">
+<link rel="import" href="bower_components/iron-icons/iron-icons.html">
 <link rel="import" href="my-login-page.html">
 <link rel="import" href="my-join-party-page.html">
 <link rel="import" href="my-main-app-page.html">
@@ -51,7 +51,6 @@
 
       updateState: function(e) {
         this.partyId = e.detail.id;
-        console.log(this.partyId);
       },
 
       _joinPageHidden: function(user, partyId) {
