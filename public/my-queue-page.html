@@ -5,11 +5,17 @@
 <link rel="import" href="bower_components/iron-image/iron-image.html">
 <link rel="import" href="bower_components/polymerfire/firebase-query.html">
 
+<link rel="import" href="shared-styles.html">
+
 <dom-module id="my-queue-page">
   <template>
-    <style>
+    <style include="shared-styles">
       :host {
         display: block;
+      }
+
+      h2 {
+        padding: 20px 0 0 20px;
       }
 
       #current {
@@ -22,17 +28,7 @@
       data="{{songs}}">
     </firebase-query>
 
-    
-    <template is="dom-repeat" items={{array}} 
-      as=item index-as=index
-      filter="isHandler" sort="sortHandler" observe="itemField1 itemField2">
-      <!-- {{item}} and {{index}} can be used in this binding scope -->
-      
-    </template>
-    
-
     <template is="dom-repeat" items="[[songs]]" as="song" index-as="index">
-
       
       <template is="dom-if" if="[[_computeIdx(index)]]">
         <paper-material elevation="1">
