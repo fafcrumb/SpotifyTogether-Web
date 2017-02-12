@@ -2,6 +2,7 @@
 <link rel="import" href="bower_components/paper-item/paper-item.html">
 <link rel="import" href="bower_components/paper-item/paper-item-body.html">
 <link rel="import" href="bower_components/paper-material/paper-material.html">
+<link rel="import" href="bower_components/iron-image/iron-image.html">
 <link rel="import" href="bower_components/polymerfire/firebase-query.html">
 
 <dom-module id="my-queue-page">
@@ -10,6 +11,10 @@
       :host {
         display: block;
       }
+
+      #current {
+        height: 150px;
+      }
     </style>
 
     <firebase-query id="query"
@@ -17,16 +22,40 @@
       data="{{songs}}">
     </firebase-query>
 
-    <template is="dom-repeat" items="[[songs]]" as="song">
+    
+    <template is="dom-repeat" items={{array}} 
+      as=item index-as=index
+      filter="isHandler" sort="sortHandler" observe="itemField1 itemField2">
+      <!-- {{item}} and {{index}} can be used in this binding scope -->
+      
+    </template>
+    
 
-      <paper-material elevation="1">
-        <paper-item>
-          <paper-item-body two-line>
-            <div>[[song.name]]</div>
-            <div secondary>[[song.artist]]</div>
-          </paper-item-body>
-        </paper-item>
-      </paper-material>
+    <template is="dom-repeat" items="[[songs]]" as="song" index-as="index">
+
+      
+      <template is="dom-if" if="[[_computeIdx(index)]]">
+        <paper-material elevation="1">
+          <h2>Currently Playing</h2>
+          <paper-item id="current">
+            <paper-item-body two-line>
+             <div>[[song.name]]</div>
+             <div secondary>[[song.artist]]</div>
+            </paper-item-body>
+          </paper-item>
+        </paper-material>
+      </template>
+
+      <template is="dom-if" if="[[_computeIdx2(index)]]">  
+        <paper-material elevation="1">
+          <paper-item>
+            <paper-item-body two-line>
+              <div>[[song.name]]</div>
+              <div secondary>[[song.artist]]</div>
+            </paper-item-body>
+          </paper-item>
+        </paper-material>
+      </template>
 
     </template>
     
@@ -37,6 +66,14 @@
 
       properties: {
         partyId: String,
+      },
+
+      _computeIdx: function(index) {
+        return index === 0;
+      },
+
+      _computeIdx2: function(index) {
+        return index !== 0;
       },
 
     });

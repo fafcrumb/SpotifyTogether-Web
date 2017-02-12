@@ -1,11 +1,14 @@
 <link rel="import" href="bower_components/polymer/polymer.html">
 <link rel="import" href="bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="bower_components/paper-item/paper-item.html">
+<link rel="import" href="bower_components/paper-item/paper-icon-item.html">
 <link rel="import" href="bower_components/paper-item/paper-item-body.html">
 <link rel="import" href="bower_components/paper-material/paper-material.html">
 <link rel="import" href="bower_components/iron-icon/iron-icon.html">
 <link rel="import" href="bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="bower_components/iron-image/iron-image.html">
 <link rel="import" href="bower_components/polymerfire/firebase-document.html">
+
 
 <dom-module id="my-search-page">
   <template>
@@ -18,6 +21,15 @@
       :host(.hidden) {
         transition: none;
         opacity: 0;
+      }
+      paper-icon-item {
+        padding: 20px 0;
+      }
+      iron-image {
+        margin-right: 50px;
+      }
+      paper-icon-button {
+        margin-right: 50px;
       }
     </style>
 
@@ -36,15 +48,21 @@
        debounce-duration="300"></iron-ajax>
     
     <template is="dom-repeat" id="domRepeat" items="[[response.tracks.items]]" as="track">
+
       <paper-material elevation="1">
-        <paper-item>
+        <paper-icon-item>
+          <iron-image 
+            src="[[track.album.images.0.url]]" 
+            style="width:100px; height:100px; background-color: lightgray;"
+            sizing="cover"
+            preload fade></iron-image>
           <paper-item-body two-line>
             <div>[[track.name]]</div>
             <div secondary>[[track.artists.0.name]]</div>
           </paper-item-body>
           <paper-icon-button icon="add-circle" on-tap="addSong" hidden$="[[track.added]]"></paper-icon-button>
           <iron-icon icon="check" hidden$="[[!track.added]]"></iron-icon>
-        </paper-item>
+        </paper-icon-item>
       </paper-material>
 
     </template>
@@ -64,7 +82,8 @@
         this.$.doc.ref.push({
           name: model.track.name,
           artist: model.track.artists[0].name,
-          spotify_uri: model.track.id,
+          spotify_uri: model.track.uri,
+          skip_total: 0,
         });
         model.set('track.added', true);
       },
