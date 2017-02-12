@@ -31,8 +31,8 @@
     </firebase-auth>
 
     <my-login-page hidden$="[[user]]"></my-login-page>
-    <my-join-party-page on-joined-party="updateState" hidden$="[[!_blah(user, partyId)]]"></my-join-party-page>
-    <my-main-app-page hidden="[[!partyId]]"></my-main-app-page>
+    <my-join-party-page on-joined-party="updateState" hidden$="[[!_joinPageHidden(user, partyId)]]"></my-join-party-page>
+    <my-main-app-page hidden="[[!partyId]]" party-id="[[partyId]]"></my-main-app-page>
     <my-404-page hidden></my-404-page>
     
   </template>
@@ -51,12 +51,10 @@
 
       updateState: function(e) {
         this.partyId = e.detail.id;
-        //var meta = document.createElement('iron-meta');
-        //meta.key = 'partyId';
-        //meta.value = e.detail.id;
+        console.log(this.partyId);
       },
 
-      _blah: function(user, partyId) {
+      _joinPageHidden: function(user, partyId) {
         return user && !partyId;
       },
 

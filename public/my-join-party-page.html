@@ -47,7 +47,6 @@
         this.$.query.ref.child(partyKey).once('value', (snapshot) => {
           var partyId = snapshot.val();
           if (partyId) {
-            console.log(partyId);
             this.fire('joined-party', {id: partyId});
           }
           else {

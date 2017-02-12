@@ -1,17 +1,63 @@
 <link rel="import" href="bower_components/polymer/polymer.html">
+<link rel="import" href="bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="bower_components/paper-item/paper-item.html">
+<link rel="import" href="bower_components/paper-item/paper-item-body.html">
+<link rel="import" href="bower_components/paper-material/paper-material.html">
 
 <dom-module id="my-search-page">
   <template>
     <style>
       :host {
         display: block;
+        opacity: 1;
+        transition: opacity 0.4s;
+      }
+      :host(.hidden) {
+        transition: none;
+        opacity: 0;
       }
     </style>
-    <h1>search page</h1>
+    
+    
+    <iron-ajax
+       auto
+       url="https://api.spotify.com/v1/search"
+       params$='{"q":"[[searchStr]]", "type":"track", "market":"US"}'
+       handle-as="json"
+       last-response="{{response}}"
+       on-response="_fadeInOut"
+       debounce-duration="300"></iron-ajax>
+    
+    <template is="dom-repeat" items="[[response.tracks.items]]" as="track">
+
+      <paper-material elevation="1">
+        <paper-item>
+          <paper-item-body two-line>
+            <div>[[track.name]]</div>
+            <div secondary>[[track.artists.0.name]]</div>
+          </paper-item-body>
+          <iron-icon icon="warning"></iron-icon>
+        </paper-item>
+      </paper-material>
+
+    </template>
+
   </template>
   <script>
     Polymer({
-      is: 'my-search-page'
+      is: 'my-search-page',
+
+      properties: {
+        searchStr: String,
+      },
+
+      _fadeInOut: function() {
+        this.classList.add('hidden');
+        this.async(function() {
+          this.classList.remove('hidden');
+        }, 1);
+      },
+
     });
   </script>
 </dom-module>

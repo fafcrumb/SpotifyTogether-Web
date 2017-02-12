@@ -11,10 +11,10 @@
       }
     </style>
     
-    <paper-input label="Search" type="search" focused="{{searching}}"></paper-input>
+    <paper-input label="Search" type="search" focused="{{searching}}" value="{{searchStr}}"></paper-input>
     
-    <my-queue-page hidden$="[[searching]]"></my-queue-page>
-    <my-search-page hidden$="[[!searching]]"></my-search-page>
+    <my-queue-page hidden$="[[searching]]" party-id="[[partyId]]"></my-queue-page>
+    <my-search-page hidden$="[[!searching]]" search-str="[[searchStr]]"></my-search-page>
 
   </template>
   <script>
@@ -25,7 +25,8 @@
         searching: {
           type: Boolean,
           value: false
-        }
+        },
+        partyId: String,
       },
 
     });

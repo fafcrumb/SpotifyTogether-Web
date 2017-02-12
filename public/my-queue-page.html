@@ -1,4 +1,8 @@
 <link rel="import" href="bower_components/polymer/polymer.html">
+<link rel="import" href="bower_components/paper-item/paper-item.html">
+<link rel="import" href="bower_components/paper-item/paper-item-body.html">
+<link rel="import" href="bower_components/paper-material/paper-material.html">
+<link rel="import" href="bower_components/polymerfire/firebase-query.html">
 
 <dom-module id="my-queue-page">
   <template>
@@ -7,11 +11,42 @@
         display: block;
       }
     </style>
-    <h1>queue page</h1>
+
+    <firebase-query id="query"
+      path="/songs/[[partyId]]"
+      data="{{songs}}">
+    </firebase-query>
+
+    <template is="dom-repeat" items="[[songs]]" as="song">
+
+      <paper-material elevation="1">
+        <paper-item>
+          <paper-item-body two-line>
+            <div>[[song.name]]</div>
+            <div secondary>[[song.artist]]</div>
+          </paper-item-body>
+          <iron-icon icon="warning"></iron-icon>
+        </paper-item>
+      </paper-material>
+
+    </template>
+    
+    <paper-button raised on-tap="test">test</paper-button>
+    
+
   </template>
   <script>
     Polymer({
-      is: 'my-queue-page'
+      is: 'my-queue-page',
+
+      properties: {
+        partyId: String,
+      },
+
+      test: function() {
+        
+      }
+
     });
   </script>
 </dom-module>
