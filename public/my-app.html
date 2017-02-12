@@ -1,11 +1,12 @@
 <link rel="import" href="bower_components/polymer/polymer.html">
 <link rel="import" href="bower_components/polymerfire/polymerfire.html">
 <link rel="import" href="bower_components/polymerfire/firebase-app.html">
-<link rel="import" href="bower_components/app-route/app-location.html">
-<link rel="import" href="bower_components/app-route/app-route.html">
-<link rel="import" href="bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="bower_components/polymerfire/firebase-auth.html">
 <link rel="import" href="bower_components/paper-input/paper-input.html">
-<link rel="import" href="my-login.html">
+<link rel="import" href="bower_components/iron-meta/iron-meta.html">
+<link rel="import" href="my-login-page.html">
+<link rel="import" href="my-join-party-page.html">
+<link rel="import" href="my-main-app-page.html">
 
 <link rel="import" href="shared-styles.html">
 
@@ -24,27 +25,15 @@
       api-key="AIzaSyBJxf-hJa7RQVBPYkdjt27yBcDj0b1tG8o">
     </firebase-app>
 
-    <app-location route="{{route}}"></app-location>
-    <app-route
-        route="{{route}}"
-        pattern="/:page"
-        data="{{routeData}}"
-        tail="{{subroute}}"></app-route>
+    <firebase-auth
+      id="auth"
+      user="{{user}}">
+    </firebase-auth>
 
-    <iron-pages
-        selected="[[page]]"
-        attr-for-selected="name"
-        fallback-selection="404"
-        role="main">
-      <login-page name="login-page"></login-page>
-      <join-party-page name="join-party-page"></join-party-page>
-      <queue-page name="queue-page"></queue-page>
-      <party-page name="party-page"></party-page>
-      <404-page name="404"></404-page>
-    </iron-pages>
-
-
-    <my-login></my-login>
+    <my-login-page hidden$="[[user]]"></my-login-page>
+    <my-join-party-page on-joined-party="updateState" hidden$="[[!_blah(user, partyId)]]"></my-join-party-page>
+    <my-main-app-page hidden="[[!partyId]]"></my-main-app-page>
+    <my-404-page hidden></my-404-page>
     
   </template>
   <script>
@@ -53,29 +42,22 @@
       is: 'my-app',
 
       properties: {
-        page: {
+        user: Object,
+        partyId: {
           type: String,
-          reflectToAttribute: true,
-          observer: '_pageChanged',
+          value: null,
         },
       },
 
-      observers: [
-        '_routePageChanged(routeData.page)',
-      ],
-
-      _routePageChanged: function(page) {
-        this.page = page || 'login-page';
+      updateState: function(e) {
+        this.partyId = e.detail.id;
+        //var meta = document.createElement('iron-meta');
+        //meta.key = 'partyId';
+        //meta.value = e.detail.id;
       },
 
-      _pageChanged: function(page) {
-        // Load page import on demand. Show 404 page if fails
-        var resolvedPageUrl = this.resolveUrl(page + '-page' + '.html');
-        this.importHref(resolvedPageUrl, null, this._showPage404, true);
-      },
-
-      _showPage404: function() {
-        this.page = '404';
+      _blah: function(user, partyId) {
+        return user && !partyId;
       },
 
     });

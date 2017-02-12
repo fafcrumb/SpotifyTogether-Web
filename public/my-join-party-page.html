@@ -1,0 +1,65 @@
+<link rel="import" href="bower_components/polymer/polymer.html">
+<link rel="import" href="bower_components/paper-input/paper-input.html">
+<link rel="import" href="bower_components/paper-button/paper-button.html">
+<link rel="import" href="bower_components/paper-toast/paper-toast.html">
+<link rel="import" href="bower_components/polymerfire/firebase-auth.html">
+<link rel="import" href="bower_components/polymerfire/firebase-query.html">
+
+<dom-module id="my-join-party-page">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+
+      paper-input {
+        width: 300px;
+      }
+    </style>
+
+    <firebase-auth
+      id="auth"
+      user="{{user}}">
+    </firebase-auth>
+
+    <firebase-query 
+      id="query"
+      path="/party_keys"
+      data="{{party_keys}}"></firebase-query>
+
+    <h1 hidden$="[[!user]]">Welcome [[user.displayName]]</h1>
+    
+    <paper-input id="partyKeyInput" label="Party Code" no-label-float maxlength="4"></paper-input>
+    
+    <paper-button raised on-tap="joinParty">Join</paper-button>
+
+    <paper-button raised on-tap="logout" hidden$="[[!user]]">Logout</paper-button>
+
+    <paper-toast id="toast" text="Party not found! :("></paper-toast>
+    
+  </template>
+  <script>
+    Polymer({
+      is: 'my-join-party-page',
+
+      joinParty: function() {
+        var partyKey = this.$.partyKeyInput.value;
+        this.$.query.ref.child(partyKey).once('value', (snapshot) => {
+          var partyId = snapshot.val();
+          if (partyId) {
+            console.log(partyId);
+            this.fire('joined-party', {id: partyId});
+          }
+          else {
+            this.$.toast.open();
+          }
+        });
+      },
+
+      logout: function() {
+        this.$.auth.signOut();
+      }
+
+    });
+  </script>
+</dom-module>
