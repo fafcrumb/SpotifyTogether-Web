@@ -2,7 +2,6 @@
 <link rel="import" href="bower_components/paper-input/paper-input.html">
 <link rel="import" href="bower_components/paper-button/paper-button.html">
 <link rel="import" href="bower_components/paper-toast/paper-toast.html">
-<link rel="import" href="bower_components/polymerfire/firebase-auth.html">
 <link rel="import" href="bower_components/polymerfire/firebase-query.html">
 
 <link rel="import" href="shared-styles.html">
@@ -19,23 +18,18 @@
       }
     </style>
 
-    <firebase-auth
-      id="auth"
-      user="{{user}}">
-    </firebase-auth>
-
     <firebase-query 
       id="query"
       path="/party_keys"
       data="{{party_keys}}"></firebase-query>
 
-    <h1 hidden$="[[!user]]">Welcome [[user.displayName]]</h1>
+    <h1>Welcome [[user.displayName]]</h1>
     
     <paper-input id="partyKeyInput" label="Party Code" no-label-float maxlength="4"></paper-input>
     
     <paper-button raised on-tap="joinParty">Join</paper-button>
 
-    <paper-button raised on-tap="logout" hidden$="[[!user]]">Logout</paper-button>
+    <paper-button raised on-tap="logout">Logout</paper-button>
 
     <paper-toast id="toast" text="Party not found! :("></paper-toast>
     
