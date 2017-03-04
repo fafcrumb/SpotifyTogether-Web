@@ -18,18 +18,22 @@
       }
     </style>
 
+    <firebase-auth
+      id="auth"
+      user="{{user}}">
+    </firebase-auth>
+
     <firebase-query 
       id="query"
-      path="/party_keys"
-      data="{{party_keys}}"></firebase-query>
+      path="/party_keys"></firebase-query>
 
-    <h1>Welcome [[user.displayName]]</h1>
+    <h1>Welcome [[userName]]</h1>
     
     <paper-input id="partyKeyInput" label="Party Code" no-label-float maxlength="4"></paper-input>
     
     <paper-button raised on-tap="joinParty">Join</paper-button>
 
-    <paper-button raised on-tap="logout">Logout</paper-button>
+    <paper-button raised on-tap="logoutClicked">Logout</paper-button>
 
     <paper-toast id="toast" text="Party not found! :("></paper-toast>
     
@@ -37,6 +41,10 @@
   <script>
     Polymer({
       is: 'my-join-party-page',
+
+      properties: {
+        userName: String,
+      },
 
       joinParty: function() {
         var partyKey = this.$.partyKeyInput.value;
@@ -51,8 +59,8 @@
         });
       },
 
-      logout: function() {
-        this.$.auth.signOut();
+      logoutClicked: function() {
+        this.fire('logout');
       }
 
     });

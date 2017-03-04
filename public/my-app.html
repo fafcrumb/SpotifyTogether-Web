@@ -26,12 +26,12 @@
     </firebase-app>
 
     <firebase-auth
-      id="auth"
+      id="aut"
       user="{{user}}">
     </firebase-auth>
 
     <my-login-page hidden$="[[user]]"></my-login-page>
-    <my-join-party-page on-joined-party="updateState" hidden$="[[!_joinPageHidden(user, partyId)]]"></my-join-party-page>
+    <my-join-party-page user-name="[[user.displayName]]" on-joined-party="updateState" hidden$="[[!_joinPageHidden(user, partyId)]]"></my-join-party-page>
     <my-main-app-page hidden="[[!partyId]]" party-id="[[partyId]]"></my-main-app-page>
     <my-404-page hidden></my-404-page>
     
@@ -47,6 +47,14 @@
           type: String,
           value: null,
         },
+      },
+
+      listeners: {
+        'logout': 'logoutUser'
+      },
+      
+      logoutUser: function() {
+        this.$.auth.signOut();
       },
 
       updateState: function(e) {
