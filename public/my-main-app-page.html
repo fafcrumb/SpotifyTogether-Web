@@ -1,0 +1,46 @@
+<link rel="import" href="bower_components/polymer/polymer.html">
+<link rel="import" href="bower_components/paper-input/paper-input.html">
+<link rel="import" href="bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="my-queue-page.html">
+<link rel="import" href="my-search-page.html">
+
+<dom-module id="my-main-app-page">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+    </style>
+    
+    <paper-icon-button icon="arrow-back" on-tap="goBack" hidden$="[[!searching]]"></paper-icon-button>
+    <paper-input label="Search" type="search" on-focused-changed="goSearch" value="{{searchStr}}"></paper-input>
+    
+    <my-queue-page hidden$="[[searching]]" party-id="[[partyId]]"></my-queue-page>
+    <my-search-page hidden$="[[!searching]]" search-str="[[searchStr]]" party-id="[[partyId]]"></my-search-page>
+
+  </template>
+  <script>
+    Polymer({
+      is: 'my-main-app-page',
+
+      properties: {
+        searching: {
+          type: Boolean,
+          value: false
+        },
+        partyId: String,
+      },
+
+      goSearch(e) {
+        if (e.detail.value && !this.searching) {
+          this.searching = true;
+        }
+      },
+
+      goBack() {
+        this.searching = false;
+      },
+
+    });
+  </script>
+</dom-module>

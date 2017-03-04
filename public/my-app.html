@@ -1,10 +1,18 @@
+<link rel="import" href="bower_components/polymer/polymer.html">
 <link rel="import" href="bower_components/polymerfire/polymerfire.html">
 <link rel="import" href="bower_components/polymerfire/firebase-app.html">
-<link rel="import" href="my-login.html">
+<link rel="import" href="bower_components/polymerfire/firebase-auth.html">
+<link rel="import" href="bower_components/paper-input/paper-input.html">
+<link rel="import" href="bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="my-login-page.html">
+<link rel="import" href="my-join-party-page.html">
+<link rel="import" href="my-main-app-page.html">
+
+<link rel="import" href="shared-styles.html">
 
 <dom-module id="my-app">
   <template>
-    <style>
+    <style include="shared-styles">
       :host {
         display: block;
       }
@@ -17,12 +25,38 @@
       api-key="AIzaSyBJxf-hJa7RQVBPYkdjt27yBcDj0b1tG8o">
     </firebase-app>
 
-    <my-login></my-login>
+    <firebase-auth
+      id="auth"
+      user="{{user}}">
+    </firebase-auth>
+
+    <my-login-page hidden$="[[user]]"></my-login-page>
+    <my-join-party-page on-joined-party="updateState" hidden$="[[!_joinPageHidden(user, partyId)]]"></my-join-party-page>
+    <my-main-app-page hidden="[[!partyId]]" party-id="[[partyId]]"></my-main-app-page>
+    <my-404-page hidden></my-404-page>
     
   </template>
   <script>
     Polymer({
-      is: 'my-app'
+
+      is: 'my-app',
+
+      properties: {
+        user: Object,
+        partyId: {
+          type: String,
+          value: null,
+        },
+      },
+
+      updateState: function(e) {
+        this.partyId = e.detail.id;
+      },
+
+      _joinPageHidden: function(user, partyId) {
+        return user && !partyId;
+      },
+
     });
   </script>
 </dom-module>

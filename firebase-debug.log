@@ -1,0 +1,31 @@
+[debug] ----------------------------------------------------------------------
+[debug] Command:      /usr/local/bin/node /usr/local/bin/firebase deploy
+[debug] CLI Version:  3.2.3
+[debug] Platform:     darwin
+[debug] Node Version: v6.9.4
+[debug] Time:         Sun Feb 12 2017 12:52:11 GMT-0500 (EST)
+[debug] ----------------------------------------------------------------------
+[debug] 
+[debug] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase"]
+[debug] > refreshing access token with scopes: ["email","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","openid"]
+[debug] >>> HTTP REQUEST POST https://www.googleapis.com/oauth2/v3/token { refresh_token: '1/v_rJXjwPm-PjhD9A0xFSkMvdZtO10Yl6DAd00jz3rsWf3lVY-tzXUpD0CvRd_WPG',
+  client_id: '563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com',
+  client_secret: 'j9iVZfS8kkCEFUPaAeJV0sAi',
+  grant_type: 'refresh_token',
+  scope: 'email https://www.googleapis.com/auth/cloudplatformprojects.readonly https://www.googleapis.com/auth/firebase openid' } 
+ Sun Feb 12 2017 12:52:11 GMT-0500 (EST)
+[debug] <<< HTTP RESPONSE 200
+[debug] >>> HTTP REQUEST GET https://admin.firebase.com/v1/projects/spotify-party-da303  
+ Sun Feb 12 2017 12:52:11 GMT-0500 (EST)
+[debug] <<< HTTP RESPONSE 200
+[debug] >>> HTTP REQUEST GET https://admin.firebase.com/v1/database/spotify-party-da303/tokens  
+ Sun Feb 12 2017 12:52:12 GMT-0500 (EST)
+[debug] <<< HTTP RESPONSE 200
+[info] 
+[info] === Deploying to 'spotify-party-da303'...
+[info] 
+[info] i  deploying database, hosting
+[info] ✔  database: rules ready to deploy.
+[info] i  hosting: preparing public directory for upload...
+[debug] >>> HTTP REQUEST PUT https://deploy.firebase.com/v1/hosting/spotify-party-da303/uploads/-KcnS1LHwVLufpon1Xys?fileCount=540&message=  
+ Sun Feb 12 2017 12:52:14 GMT-0500 (EST)
