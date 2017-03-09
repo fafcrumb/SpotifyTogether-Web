@@ -26,13 +26,20 @@
     </firebase-app>
 
     <firebase-auth
-      id="aut"
+      id="auth"
       user="{{user}}">
     </firebase-auth>
 
     <my-login-page hidden$="[[user]]"></my-login-page>
-    <my-join-party-page user-name="[[user.displayName]]" on-joined-party="updateState" hidden$="[[!_joinPageHidden(user, partyId)]]"></my-join-party-page>
-    <my-main-app-page hidden="[[!partyId]]" party-id="[[partyId]]"></my-main-app-page>
+    <my-join-party-page 
+      user-name="[[user.displayName]]" 
+      on-joined-party="updateState"
+      hidden$="[[!_joinPageHidden(user, partyId)]]">
+    </my-join-party-page>
+    <my-main-app-page 
+      hidden="[[!partyId]]"
+      party-id="[[partyId]]">
+    </my-main-app-page>
     <my-404-page hidden></my-404-page>
     
   </template>
