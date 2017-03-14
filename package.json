@@ -10,6 +10,9 @@
   },
   "scripts": {
     "lint": "eslint . --ext js,html --ignore-path .gitignore",
-    "test": "npm run lint && polymer test"
+    "test": "npm run lint && polymer test",
+    "serve": "polymer serve -H localhost -p 8080 -o --open-path /",
+    "serve-build": "polymer serve build/default -H localhost -p 8080 -o --open-path /",
+    "build": "npm run lint && polymer build --js-minify --html-minify --css-minify --add-service-worker --sw-precache-config sw-precache-config.js"
   }
 }
