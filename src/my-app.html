@@ -9,6 +9,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 -->
 
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/polymerfire/polymerfire.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-app.html">
 <link rel="import" href="../bower_components/app-layout/app-drawer/app-drawer.html">
 <link rel="import" href="../bower_components/app-layout/app-drawer-layout/app-drawer-layout.html">
 <link rel="import" href="../bower_components/app-layout/app-header/app-header.html">
@@ -62,6 +64,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         font-weight: bold;
       }
     </style>
+
+    <firebase-app
+        id="firebase"
+        auth-domain="spotify-party-da303.firebaseapp.com"
+        database-url="https://spotify-party-da303.firebaseio.com/"
+        api-key="AIzaSyBJxf-hJa7RQVBPYkdjt27yBcDj0b1tG8o"></firebase-app>
 
     <app-location route="{{route}}"></app-location>
     <app-route
