@@ -2,3 +2,7 @@ firebase-debug.log
 out/
 .vscode/
 .DS_Store
+node_modules/
+build/
+bower_components/
+
