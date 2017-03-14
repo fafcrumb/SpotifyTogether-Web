@@ -1,6 +1,5 @@
 {
-  "name": "polymer-starter-kit",
-  "license": "BSD-3-Clause",
+  "name": "spotify-together",
   "version": "1.0.0",
   "devDependencies": {
     "eslint": "^3.12.0",

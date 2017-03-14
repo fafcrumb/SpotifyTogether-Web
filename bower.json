@@ -1,9 +1,8 @@
 {
-  "name": "polymer-starter-kit",
+  "name": "spotify-together",
   "authors": [
-    "The Polymer Authors"
+    "Brian Ferch, Matt Graham, Sam Koved"
   ],
-  "license": "https://polymer.github.io/LICENSE.txt",
   "dependencies": {
     "app-layout": "PolymerElements/app-layout#2.0-preview",
     "app-route": "PolymerElements/app-route#2.0-preview",
