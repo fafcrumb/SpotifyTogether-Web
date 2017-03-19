@@ -4,14 +4,16 @@
   "devDependencies": {
     "eslint": "^3.12.0",
     "eslint-config-google": "^0.7.1",
-    "eslint-plugin-html": "^1.7.0",
-    "web-component-tester": "^5.0.0"
+    "eslint-plugin-html": "^1.7.0"
   },
   "scripts": {
     "lint": "eslint . --ext js,html --ignore-path .gitignore",
     "test": "npm run lint && polymer test",
-    "serve": "polymer serve -p 8080 -o --open-path /",
-    "serve-build": "polymer serve build/default -H localhost -p 8080 -o --open-path /",
+    "polyserve": "polymer serve -p 8080",
+    "polyserve-build": "polymer serve build/default -p 8080",    
+    "serve": "npm run polyserve & npm run watch",
+    "serve-build": "npm run polyserve-build & npm run watch",
+    "watch": "browser-sync start --proxy 127.0.0.1:8080 --files 'index.html, src/**/*.html, images/*'",
     "build": "npm run lint && polymer build --js-minify --html-minify --css-minify --add-service-worker --sw-precache-config sw-precache-config.js"
   }
 }

@@ -1,70 +1,30 @@
-<!--
-@license
-Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
-This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-Code distributed by Google as part of the polymer project is also
-subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
--->
 
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
 <link rel="import" href="../bower_components/polymerfire/firebase-app.html">
-<link rel="import" href="../bower_components/app-layout/app-drawer/app-drawer.html">
-<link rel="import" href="../bower_components/app-layout/app-drawer-layout/app-drawer-layout.html">
-<link rel="import" href="../bower_components/app-layout/app-header/app-header.html">
-<link rel="import" href="../bower_components/app-layout/app-header-layout/app-header-layout.html">
-<link rel="import" href="../bower_components/app-layout/app-scroll-effects/app-scroll-effects.html">
-<link rel="import" href="../bower_components/app-layout/app-toolbar/app-toolbar.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-auth.html">
 <link rel="import" href="../bower_components/app-route/app-location.html">
-<link rel="import" href="../bower_components/app-route/app-route.html">
-<link rel="import" href="../bower_components/iron-pages/iron-pages.html">
-<link rel="import" href="../bower_components/iron-selector/iron-selector.html">
-<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
 <link rel="import" href="app-theme.html">
 <link rel="import" href="my-icons.html">
+
 
 <dom-module id="my-app">
   <template>
     <style>
-      :host {
+       :host {
         display: block;
       }
-
-      app-drawer-layout:not([narrow]) [drawer-toggle] {
-        display: none;
+      
+       :host>*[hidden] {
+        display: none !important;
       }
 
-      app-header {
-        color: #fff;
-        background-color: var(--app-bar-color);
-      }
-
-      app-header paper-icon-button {
-        --paper-icon-button-ink-color: var(--icon-color);
-      }
-
-      #drawer {
-        --app-drawer-content-container: {
-          background-color: var(--card-color);
-        }
-      }
-
-      .drawer-list {
-        margin: 0 20px;
-      }
-
-      .drawer-list a {
-        display: block;
-        padding: 0 16px;
-        text-decoration: none;
-        color: var(--secondary-text-color);
-        line-height: 40px;
-      }
-
-      .drawer-list a.iron-selected {
-        color: var(--primary-text-color);
-        font-weight: bold;
+      #loadingContainer {
+        @apply --layout;
+        @apply --layout-fit;
+        @apply --layout-center-center;    
       }
     </style>
 
@@ -74,46 +34,25 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         database-url="https://spotify-party-da303.firebaseio.com/"
         api-key="AIzaSyBJxf-hJa7RQVBPYkdjt27yBcDj0b1tG8o"></firebase-app>
 
+    <firebase-auth
+        id="auth"
+        user="{{user}}"
+        status-known="{{statusKnown}}"></firebase-auth>
+
     <app-location route="{{route}}"></app-location>
-    <app-route
-        route="{{route}}"
-        pattern="/:page"
-        data="{{routeData}}"
-        tail="{{subroute}}"></app-route>
 
-    <app-drawer-layout fullbleed>
-      <!-- Drawer content -->
-      <app-drawer id="drawer" slot="drawer">
-        <app-toolbar>Menu</app-toolbar>
-        <iron-selector selected="[[page]]" attr-for-selected="name" class="drawer-list" role="navigation">
-          <a name="view1" href="/view1">View One</a>
-          <a name="view2" href="/view2">View Two</a>
-          <a name="view3" href="/view3">View Three</a>
-        </iron-selector>
-      </app-drawer>
+    <div id="loadingContainer" hidden$="[[statusKnown]]">
+      <paper-spinner id="loading" active></paper-spinner>
+    </div>
 
-      <!-- Main content -->
-      <app-header-layout>
+    <login-view 
+        id="login"
+        hidden$="[[!showLogin]]"></login-view>
 
-        <app-header slot="header" condenses reveals effects="waterfall">
-          <app-toolbar>
-            <paper-icon-button icon="my-icons:menu" drawer-toggle></paper-icon-button>
-            <div main-title>My App</div>
-          </app-toolbar>
-        </app-header>
+    <main-app-view
+        id="app"
+        hidden$="[[!showApp]]"></main-app-view>
 
-        <iron-pages
-            selected="[[page]]"
-            attr-for-selected="name"
-            fallback-selection="view404"
-            role="main">
-          <my-view1 name="view1"></my-view1>
-          <my-view2 name="view2"></my-view2>
-          <my-view3 name="view3"></my-view3>
-          <my-view404 name="view404"></my-view404>
-        </iron-pages>
-      </app-header-layout>
-    </app-drawer-layout>
   </template>
 
   <script>
@@ -123,50 +62,47 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       static get properties() {
         return {
-          page: {
-            type: String,
-            reflectToAttribute: true,
-            observer: '_pageChanged',
+          showLogin: {
+            type: Boolean,
+            value: false
           },
+
+          showApp: {
+            type: Boolean,
+            value: false
+          }
         };
       }
 
       static get observers() {
         return [
-          '_routePageChanged(routeData.page)',
+          '_authStatus(statusKnown, user)',
         ];
       }
 
-      _routePageChanged(page) {
-        // Polymer 2.0 will call with `undefined` on initialization.
-        // Ignore until we are properly called with a string.
-        if (page === undefined) {
-          return;
-        }
-
-        // If no page was found in the route data, page will be an empty string.
-        // Deault to 'view1' in that case.
-        this.page = page || 'view1';
-
-        // Close a non-persistent drawer when the page & route are changed.
-        if (!this.$.drawer.persistent) {
-          this.$.drawer.close();
+      _authStatus(statusKnown, user) {
+        if (!statusKnown) { return; }
+        if (user) {
+          this._loadPage('main-app-view.html');
+          if (this.route.path === '/login' ||
+              this.route.path === '/')
+            this.set('route.path', '/view1');
+          this.showApp = true;
+          this.showLogin = false;
+        } else {
+          this._loadPage('login-view.html');
+          this.set('route.path', '/login');
+          this.showLogin = true;
+          this.showApp = false;
         }
       }
 
-      _pageChanged(page) {
-        // Load page import on demand. Show 404 page if fails
-        var resolvedPageUrl = this.resolveUrl('my-' + page + '.html');
+      _loadPage(pageName) {
         Polymer.importHref(
-            resolvedPageUrl,
-            null,
-            this._showPage404.bind(this),
-            true);
+          this.resolveUrl(pageName),
+          null, null, true);
       }
 
-      _showPage404() {
-        this.page = 'view404';
-      }
     }
 
     window.customElements.define(MyApp.is, MyApp);
