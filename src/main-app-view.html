@@ -63,7 +63,7 @@
         route="[[route]]"
         pattern="/:page"
         data="{{routeData}}"
-        tail="{{subroute}}"></app-route>
+        tail="{{subRoute}}"></app-route>
 
     <app-drawer-layout fullbleed force-narrow="true">
       <!-- Drawer content -->
@@ -113,6 +113,10 @@
             reflectToAttribute: true,
             observer: '_pageChanged',
           },
+
+          user: Object,
+          subRoute: Object,
+          routeData: Object
         };
       }
 

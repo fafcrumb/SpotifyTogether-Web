@@ -70,7 +70,10 @@
           showApp: {
             type: Boolean,
             value: false
-          }
+          },
+
+          route: Object,
+          user: Object
         };
       }
 
@@ -100,7 +103,7 @@
       _loadPage(pageName) {
         Polymer.importHref(
           this.resolveUrl(pageName),
-          null, null, true);
+          null, null, false);
       }
 
     }
