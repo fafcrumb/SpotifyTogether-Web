@@ -29,7 +29,10 @@
       static get is() { return 'login-view'; }
 
       login() {
-        this.$.auth.signInWithRedirect();
+        var auth = this.$.auth;
+        auth.refreshNetworkStatus();
+        if (auth.online)
+          auth.signInWithRedirect();
       }
     }
 

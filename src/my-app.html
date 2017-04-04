@@ -17,11 +17,11 @@
         display: block;
       }
       
-       :host>*[hidden] {
+       :host > *[hidden] {
         display: none !important;
       }
 
-      #loadingContainer {
+      #overlay {
         @apply --layout;
         @apply --layout-fit;
         @apply --layout-center-center;    
@@ -41,17 +41,17 @@
 
     <app-location route="{{route}}"></app-location>
 
-    <div id="loadingContainer" hidden$="[[statusKnown]]">
-      <paper-spinner id="loading" active></paper-spinner>
+    <div id="overlay" hidden$="[[!loading]]">
+      <paper-spinner id="loading" active="[[loading]]"></paper-spinner>
     </div>
 
     <login-view 
         id="login"
-        hidden$="[[!showLogin]]"></login-view>
+        hidden$="[[user]]"></login-view>
 
     <main-app-view
         id="app"
-        hidden$="[[!showApp]]"></main-app-view>
+        hidden$="[[!user]]"></main-app-view>
 
   </template>
 
@@ -62,18 +62,13 @@
 
       static get properties() {
         return {
-          showLogin: {
+          loading: {
             type: Boolean,
-            value: false
+            value: true,
           },
-
-          showApp: {
-            type: Boolean,
-            value: false
-          },
-
           route: Object,
-          user: Object
+          user: Object,
+          statusKnown: Boolean,
         };
       }
 
@@ -84,26 +79,30 @@
       }
 
       _authStatus(statusKnown, user) {
-        if (!statusKnown) { return; }
+        if (!statusKnown) {
+          this.loading = true;
+          return;
+        }
         if (user) {
           this._loadPage('main-app-view.html');
           if (this.route.path === '/login' ||
               this.route.path === '/')
             this.set('route.path', '/view1');
-          this.showApp = true;
-          this.showLogin = false;
         } else {
           this._loadPage('login-view.html');
           this.set('route.path', '/login');
-          this.showLogin = true;
-          this.showApp = false;
         }
       }
 
       _loadPage(pageName) {
         Polymer.importHref(
           this.resolveUrl(pageName),
-          null, null, false);
+          this._pageLoadedCallback.bind(this),
+          null, true);
+      }
+
+      _pageLoadedCallback() {
+        this.loading = false;
       }
 
     }

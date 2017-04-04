@@ -5,7 +5,8 @@
     "src/my-view1.html",
     "src/my-view2.html",
     "src/my-view3.html",
-    "src/my-login-view.html",
+    "src/login-view.html",
+    "src/main-app-view.html",
     "src/my-view404.html"
   ],
   "sources": [
