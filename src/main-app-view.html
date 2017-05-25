@@ -11,9 +11,15 @@
 <link rel="import" href="../bower_components/app-route/app-route.html">
 <link rel="import" href="../bower_components/iron-pages/iron-pages.html">
 <link rel="import" href="../bower_components/iron-selector/iron-selector.html">
+<link rel="import" href="../bower_components/iron-media-query/iron-media-query.html">
+<link rel="import" href="../bower_components/iron-meta/iron-meta.html">
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
 
+<link rel="lazy-import" href="my-view1.html">
+<link rel="lazy-import" href="my-view2.html">
+<link rel="lazy-import" href="my-view3.html">
+<link rel="lazy-import" href="my-view404.html">
 
 <dom-module id="main-app-view">
   <template>
@@ -60,24 +66,28 @@
 
     <app-location route="{{route}}"></app-location>
     <app-route
-        route="[[route]]"
-        pattern="/:page"
+        route="{{route}}"
+        pattern="[[rootPattern]]:page"
         data="{{routeData}}"
         tail="{{subRoute}}"></app-route>
 
+    <iron-meta key="phoneMaxWidth" value="[[phoneMaxWidth]]"></iron-meta>
+    
+    <iron-media-query query="[[phoneMaxWidth]]" query-matches="{{smallScreen}}"></iron-media-query>
+
     <app-drawer-layout fullbleed force-narrow="true">
       <!-- Drawer content -->
-      <app-drawer id="drawer" slot="drawer" transition-duration="300" swipe-open="true" >
+      <app-drawer id="drawer" slot="drawer" transition-duration="400" swipe-open="[[smallScreen]]">
         <app-toolbar>Menu</app-toolbar>
         <iron-selector selected="[[page]]" attr-for-selected="name" class="drawer-list" role="navigation">
-          <a name="view1" href="/view1">View One</a>
-          <a name="view2" href="/view2">View Two</a>
-          <a name="view3" href="/view3">View Three</a>
+          <a name="view1" href="view1">View One</a>
+          <a name="view2" href="view2">View Two</a>
+          <a name="view3" href="view3">View Three</a>
         </iron-selector>
       </app-drawer>
 
       <!-- Main content -->
-      <app-header-layout>
+      <app-header-layout has-scrolling-region>
 
         <app-header slot="header" condenses reveals effects="waterfall">
           <app-toolbar>
@@ -92,7 +102,7 @@
             attr-for-selected="name"
             fallback-selection="view404"
             role="main">
-          <my-view1 name="view1"></my-view1>
+          <my-view1 name="view1" user="[[user]]"></my-view1>
           <my-view2 name="view2"></my-view2>
           <my-view3 name="view3"></my-view3>
           <my-view404 name="view404"></my-view404>
@@ -115,8 +125,18 @@
           },
 
           user: Object,
-          subRoute: Object,
+
+          rootPattern: String,
+
+          route: Object,
+          subRoute: String,
           routeData: Object,
+
+          //meta
+          phoneMaxWidth: {
+            type: String,
+            value: "max-width: 640px"
+          }
         };
       }
 
@@ -125,9 +145,11 @@
           '_routePageChanged(routeData.page)',
         ];
       }
+      
+      constructor() {
+        super();
 
-      logout() {
-        this.$.auth.signOut();
+        this.rootPattern = (new URL(this.rootPath)).pathname;
       }
 
       _routePageChanged(page) {
@@ -159,6 +181,14 @@
 
       _showPage404() {
         this.page = 'view404';
+      }
+
+      logout() {
+        requestAnimationFrame(_ => {
+          requestAnimationFrame(_ => {
+            this.$.auth.signOut();
+          });
+        });
       }
     }
 

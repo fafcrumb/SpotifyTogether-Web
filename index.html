@@ -8,6 +8,8 @@
     <title>Spotify Together</title>
     <meta name="description" content="Share a Spotify queue with your friends!">
 
+    <base href="/">
+
     <link rel="icon" href="/images/favicon.ico">
 
     <!-- See https://goo.gl/OOhYW5 -->
@@ -39,18 +41,20 @@
 
     <!-- Load and register pre-caching Service Worker -->
     <script>
+      const baseUrl = document.querySelector('base').href;
+
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
-          navigator.serviceWorker.register('/service-worker.js');
+          navigator.serviceWorker.register(baseUrl + 'service-worker.js');
         });
       }
     </script>
 
     <!-- Load webcomponents-loader.js to check and load any polyfills your browser needs -->
-    <script src="/bower_components/webcomponentsjs/webcomponents-loader.js"></script>
+    <script src="/bower_components/webcomponentsjs/webcomponents-loader.js" async></script>
 
     <!-- Load your application shell -->
-    <link rel="import" href="/src/my-app.html">
+    <link rel="import" href="/src/my-app.html" async>
 
     <!-- Add any global styles for body, document, etc. -->
     <style>
@@ -62,9 +66,29 @@
         background-color: #303030;
         color: #FFFFFF;
       }
+
+      #skeleton .header {
+        position: relative;
+        width: 100%;
+        height: 64px;
+        background: #212121;
+      }
     </style>
   </head>
   <body>
+    <div id="skeleton">
+      <div class="header"></div>
+    </div>
     <my-app></my-app>
+    <noscript>
+      <style>
+        #noscript-container {
+          text-align: center
+        }
+      </style>
+      <div id="noscript-container">
+        <h1 id="noscript-msg">Spotify Together needs Javascript to run</h1>
+      </div>
+    </noscript>
   </body>
 </html>

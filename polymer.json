@@ -18,8 +18,12 @@
     "manifest.json",
     "bower_components/webcomponentsjs/*.js"
   ],
+  "builds": [{
+    "name": "default",
+    "preset": "es6-unbundled",
+    "swPrecacheConfig": "sw-precache-config.js"
+  }],
   "lint": {
-    "input": ["index.html", "src/**/*"],
     "rules": ["polymer-2"]
   }
 }

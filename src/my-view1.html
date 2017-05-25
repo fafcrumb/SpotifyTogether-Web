@@ -9,6 +9,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 -->
 
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-auth.html">
 <link rel="import" href="shared-styles.html">
 
 <dom-module id="my-view1">
@@ -17,47 +20,50 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       :host {
         padding: 10px;
       }
+
+      paper-input#code-input {
+        --paper-input-container-input: {
+          text-transform: uppercase;
+        }
+      }
     </style>
 
-    <div class="card">
-      <div class="circle">1</div>
-      <h1>Yipee!</h1>
-      <p>Ut labores minimum atomorum pro. Laudem tibique ut has.</p>
-      <p>Lorem ipsum dolor sit amet, per in nusquam nominavi periculis, sit elit oportere ea.Lorem ipsum dolor sit amet, per in nusquam nominavi periculis, sit elit oportere ea.Cu mei vide viris gloriatur, at populo eripuit sit.</p>
-    </div>
+    <firebase-auth id="auth" provider="google"></firebase-auth>
 
-        <div class="card">
-      <div class="circle">1</div>
-      <h1>View One</h1>
-      <p>Ut labores minimum atomorum pro. Laudem tibique ut has.</p>
-      <p>Lorem ipsum dolor sit amet, per in nusquam nominavi periculis, sit elit oportere ea.Lorem ipsum dolor sit amet, per in nusquam nominavi periculis, sit elit oportere ea.Cu mei vide viris gloriatur, at populo eripuit sit.</p>
-    </div>
+    <paper-input
+        id="code-input"
+        allowed-pattern="[a-zA-Z]"
+        maxlength="4"
+        error-message="Invalid"
+        on-value-changed="_codeInputChanged"></paper-input>
 
-        <div class="card">
-      <div class="circle">1</div>
-      <h1>View One</h1>
-      <p>Ut labores minimum atomorum pro. Laudem tibique ut has.</p>
-      <p>Lorem ipsum dolor sit amet, per in nusquam nominavi periculis, sit elit oportere ea.Lorem ipsum dolor sit amet, per in nusquam nominavi periculis, sit elit oportere ea.Cu mei vide viris gloriatur, at populo eripuit sit.</p>
-    </div>
+    <paper-button raised hidden$="[[user]]" on-tap="_login">Sign-in with Google</paper-button>
 
-        <div class="card">
-      <div class="circle">1</div>
-      <h1>View One</h1>
-      <p>Ut labores minimum atomorum pro. Laudem tibique ut has.</p>
-      <p>Lorem ipsum dolor sit amet, per in nusquam nominavi periculis, sit elit oportere ea.Lorem ipsum dolor sit amet, per in nusquam nominavi periculis, sit elit oportere ea.Cu mei vide viris gloriatur, at populo eripuit sit.</p>
-    </div>
-
-        <div class="card">
-      <div class="circle">1</div>
-      <h1>View One</h1>
-      <p>Ut labores minimum atomorum pro. Laudem tibique ut has.</p>
-      <p>Lorem ipsum dolor sit amet, per in nusquam nominavi periculis, sit elit oportere ea.Lorem ipsum dolor sit amet, per in nusquam nominavi periculis, sit elit oportere ea.Cu mei vide viris gloriatur, at populo eripuit sit.</p>
-    </div>
   </template>
 
   <script>
     class MyView1 extends Polymer.Element {
+
       static get is() { return 'my-view1'; }
+
+      static get properties() {
+        return {
+          user: Object
+        }
+      }
+
+      _login() {
+        var auth = this.$.auth;
+        auth.refreshNetworkStatus();
+        if (auth.online)
+          auth.signInWithRedirect();
+      }
+
+      _codeInputChanged(_, e) {
+        if (e.value.length !== 4)
+          return;
+        console.log(e.value.toUpperCase());
+      }
     }
 
     window.customElements.define(MyView1.is, MyView1);
