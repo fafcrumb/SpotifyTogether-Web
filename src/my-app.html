@@ -4,6 +4,7 @@
 <link rel="import" href="../bower_components/polymerfire/firebase-auth-script.html">
 <link rel="import" href="../bower_components/polymerfire/firebase-database-script.html">
 <link rel="import" href="../bower_components/polymerfire/firebase-auth.html">
+<link rel="import" href="../bower_components/app-storage/app-localstorage/app-localstorage-document.html">
 <link rel="import" href="../bower_components/app-layout/app-drawer/app-drawer.html">
 <link rel="import" href="../bower_components/app-layout/app-drawer-layout/app-drawer-layout.html">
 <link rel="import" href="../bower_components/app-layout/app-header/app-header.html">
@@ -34,35 +35,30 @@
       :host {
         display: block;
       }
-      
-      *[hidden] {
-        display: none !important;
-      }
 
-      #overlay {
+      #loadingOverlay {
         @apply --layout;
         @apply --layout-fit;
         @apply --layout-center-center;
 
-        margin-top: 64px;
         z-index: 1;
-        background: var(--primary-background-color);
         opacity: 1;
         visibility: visible;
         transition: none;
+        background: var(--primary-background-color);
       }
 
-      #overlay.hidden {
+      #loadingOverlay.hidden {
         opacity: 0;
         visibility: hidden;
         transition: visibility 0.4s, opacity 0.4s linear;
       }
 
-      app-header {
+      #header {
         background-color: var(--app-bar-color);
       }
 
-      app-header paper-icon-button {
+      #hamburgerIcon {
         --paper-icon-button-ink-color: var(--icon-color);
       }
 
@@ -72,11 +68,11 @@
         }
       }
 
-      .drawer-list {
+      #drawerList {
         margin: 0 20px;
       }
 
-      .drawer-list a {
+      #drawerList a {
         display: block;
         padding: 0 16px;
         text-decoration: none;
@@ -84,7 +80,7 @@
         line-height: 40px;
       }
 
-      .drawer-list a.iron-selected {
+      #drawerList a.iron-selected {
         color: var(--primary-text-color);
         font-weight: bold;
       }
@@ -98,12 +94,16 @@
 
     <firebase-auth
         id="auth"
+        provider="google"
         user="{{user}}"
-        status-known="{{statusKnown}}"></firebase-auth>
+        status-known="{{_authStatusKnown}}"></firebase-auth>
 
-    <app-location 
-        route="{{route}}"
-        url-space-regex="/"></app-location>
+    <app-localstorage-document 
+        id="idStorage"
+        key="party:id"
+        data="{{_storedId}}"></app-localstorage-document>
+
+    <app-location route="{{route}}"></app-location>
         
     <app-route
         route="{{route}}"
@@ -112,18 +112,15 @@
         tail="{{subRoute}}"></app-route>
 
     <iron-meta key="phoneMaxWidth" value="[[phoneMaxWidth]]"></iron-meta>
-    
-    <iron-media-query query="[[phoneMaxWidth]]" query-matches="{{smallScreen}}"></iron-media-query>
+    <iron-meta key="partyCodeFormat" value="[[partyCodeFormat]]"></iron-meta>
 
-    <div id="overlay">
-      <paper-spinner id="loading" active="[[loading]]"></paper-spinner>
-    </div>
+    <iron-media-query query="[[phoneMaxWidth]]" query-matches="{{smallScreen}}"></iron-media-query>
 
     <app-drawer-layout fullbleed force-narrow="true">
       <!-- Drawer content -->
       <app-drawer id="drawer" slot="drawer" transition-duration="400" swipe-open="[[smallScreen]]">
         <app-toolbar>Menu</app-toolbar>
-        <iron-selector selected="[[page]]" attr-for-selected="name" class="drawer-list" role="navigation">
+        <iron-selector id="drawerList" selected="[[page]]" attr-for-selected="name" role="navigation">
           <a name="view1" href="view1">View One</a>
           <a name="view2" href="view2">View Two</a>
           <a name="view3" href="view3">View Three</a>
@@ -133,20 +130,25 @@
       <!-- Main content -->
       <app-header-layout has-scrolling-region>
 
-        <app-header slot="header" condenses reveals effects="waterfall">
+        <app-header id="header" slot="header" condenses reveals effects="waterfall">
           <app-toolbar>
-            <paper-icon-button icon="my-icons:menu" drawer-toggle></paper-icon-button>
+            <paper-icon-button id="hamburgerIcon" icon="my-icons:menu" drawer-toggle></paper-icon-button>
             <div main-title>Spotify Together</div>
-            <paper-button raised hidden$="[[!user]]" on-tap="logout">Logout</paper-button>
+            <paper-button raised hidden$="[[user]]" on-tap="login">Sign-in</paper-button>
+            <paper-button raised hidden$="[[!user]]" on-tap="_logoutButtonClicked">Logout</paper-button>
           </app-toolbar>
         </app-header>
+
+        <div id="loadingOverlay" class$="[[_computeOverlayClass(loading)]]">
+          <paper-spinner id="loadingSpinner" active="[[loading]]"></paper-spinner>
+        </div>
 
         <iron-pages
             selected="[[page]]"
             attr-for-selected="name"
             fallback-selection="view404"
             role="main">
-          <my-view1 name="view1" user="[[user]]"></my-view1>
+          <my-view1 name="view1"></my-view1>
           <my-view2 name="view2"></my-view2>
           <my-view3 name="view3"></my-view3>
           <my-view404 name="view404"></my-view404>
@@ -171,32 +173,46 @@
 
           loading: {
             type: Boolean,
-            value: true,
-            observer: '_loadingChanged'
+            computed: '_computeLoading(_authStatusKnown, _pageLoaded)'
           },
 
+          _pageLoaded: Boolean,
 
-          user: Object,
-          statusKnown: Boolean,
+          _storedId: {
+            type: String,
+            value: ''
+          },
+
+          _storageStatusKnown: Boolean,
+          _authStatusKnown: Boolean,
           
           rootPattern: String,
 
-          route: Object,
           subRoute: String,
           routeData: Object,
 
           //meta
           phoneMaxWidth: {
             type: String,
-            value: "max-width: 640px"
-          }
+            value: 'max-width: 640px'
+          },
+
+          partyCodeFormat: {
+            type: Object,
+            value: {
+              allowedInput: '^[a-zA-Z]+$',
+              exactFormat: new RegExp('^[A-Z]{4}$'),
+              length: 4
+            }
+          },
+
         };
       }
 
       static get observers() {
         return [
-          '_authStatus(statusKnown, user)',
-          '_routePageChanged(routeData.page)'
+          '_authStatus(_authStatusKnown, user)',
+          '_routePageChanged(routeData.page)',
         ];
       }
 
@@ -204,84 +220,108 @@
         super();
 
         this.rootPattern = (new URL(this.rootPath)).pathname;
-        //check local storage for party code
-        this.loading = true;
+        
+        this.addEventListener('set-route', e => this._setRouteListener(e));
+      }
+
+      connectedCallback() {
+        super.connectedCallback();
+
+        this._checkStorage();
+      }
+
+      _setRouteListener(e) {
+        this.set('route.path', e.detail.path);
       }
 
       _routePageChanged(page) {
-        // Polymer 2.0 will call with `undefined` on initialization.
-        // Ignore until we are properly called with a string.
         if (page === undefined) {
           return;
         }
 
-        // If no page was found in the route data, page will be an empty string.
-        // Deault to 'view1' in that case.
         this.page = page || 'view1';
+        
+        this._closeDrawer();
+      }
 
-        // Close a non-persistent drawer when the page & route are changed.
-        if (!this.$.drawer.persistent) {
-          this.$.drawer.close();
-        }
+      _closeDrawer() {
+        if (this.$.drawer.persistent) return;
+        requestAnimationFrame(_ => {
+          requestAnimationFrame(_ => {
+            this.$.drawer.close();
+          });
+        });
       }
 
       _pageChanged(page) {
-        // Load page import on demand. Show 404 page if fails
-        var resolvedPageUrl = this.resolveUrl(`my-${page}.html`);
+        if (!this._storageStatusKnown) return;
+        this._pageLoaded = false;
+
+        const resolvedPageUrl = this.resolveUrl(`my-${page}.html`);
         Polymer.importHref(
             resolvedPageUrl,
-            null,
+            this._pageLoadedCallback.bind(this),
             this._showPage404.bind(this),
             true);
+      }
+      
+      _pageLoadedCallback() {
+        this._pageLoaded = true;
       }
 
       _showPage404() {
         this.page = 'view404';
       }
 
+      // Redirect from fromPage to toPage, and if no fromPage is passed,
+      // redirect everything to toPage
+      _redirectPage(toPage, fromPage) {
+        if (fromPage ? this.page === fromPage : this.page !== toPage)
+          this.set('route.path', toPage);
+        else
+          this._pageChanged(this.page); // If page hasn't changed, manually trigger page load
+      }
+
+      _checkStorage() {
+        this.$.idStorage.transactionsComplete.then(_ => {
+          this._storageStatusKnown = true;
+
+          // If we have a party ID
+          this._storedId.length ? this._redirectPage('view2', 'view1') // Redirect view1 to view2
+                                : this._redirectPage('view1'); // Otherwise, redirect all routes to view1
+        });
+      }
+
+      login() {
+        const auth = this.$.auth;
+        auth.refreshNetworkStatus();
+        if (auth.online)
+          auth.signInWithRedirect();
+      }
+
       logout() {
+        this.$.auth.signOut();
+      }
+
+      _logoutButtonClicked() {
         requestAnimationFrame(_ => {
           requestAnimationFrame(_ => {
-            this.$.auth.signOut();
+            this.logout();
           });
         });
       }
 
-      _loadingChanged(loading) {
-        let overlayClasses = this.$.overlay.classList;
-        loading ? overlayClasses.remove('hidden') : overlayClasses.add('hidden');
+      _computeOverlayClass(loading) {
+        return loading ? '' : 'hidden'
       }
 
-      _authStatus(statusKnown, user) {
-        if (!statusKnown) {
-          this.loading = true;
-          //this.$.overlay.classList.remove('hidden');
-          return;
-        } else {
-          requestAnimationFrame(_ => {
-            this.loading = false;
-          });
-        }
-        /*if (user) {
-          this._loadPage('main-app-view.html');
-          if (this.route.path === '/login' ||
-              this.route.path === '/')
-            this.set('route.path', '/view1');
-        } else {
-          this._loadPage('login-view.html');
-          this.set('route.path', '/login');
-        }*/
+      _computeLoading(...args) {
+        // Returns true if at least one argument is false
+        return args.some(el => !el);
       }
 
-      _loadPage(pageName) {
-        Polymer.importHref(
-          this.resolveUrl(pageName),
-          this._pageLoadedCallback.bind(this),
-          null, true);
-      }
-
-      _pageLoadedCallback() {
-        this.loading = false;
+      _authStatus(_authStatusKnown, user) {
+        //nothing here yet ):
       }
 
     }

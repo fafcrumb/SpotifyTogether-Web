@@ -1,43 +1,53 @@
 <!--
 @license
 Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
-This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+This key may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
 The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
 The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-Code distributed by Google as part of the polymer project is also
+key distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
 
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-query.html">
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
-<link rel="import" href="../bower_components/polymerfire/firebase-auth.html">
+<link rel="import" href="../bower_components/iron-meta/iron-meta.html">
+<link rel="import" href="../bower_components/app-storage/app-localstorage/app-localstorage-document.html">
 <link rel="import" href="shared-styles.html">
 
 <dom-module id="my-view1">
   <template>
     <style include="shared-styles">
       :host {
+        display: block;
         padding: 10px;
       }
 
-      paper-input#code-input {
+      #codeInput {
         --paper-input-container-input: {
           text-transform: uppercase;
         }
       }
     </style>
 
-    <firebase-auth id="auth" provider="google"></firebase-auth>
+    <firebase-query id="query" path="/party_keys"></firebase-query>
+    
+    <iron-meta key="partyCodeFormat" value="{{_partyCodeFormat}}"></iron-meta>
+    
+    <app-localstorage-document
+        id="idStorage"
+        key="party:id"
+        data="{{_storedId}}"></app-localstorage-document>
 
     <paper-input
-        id="code-input"
-        allowed-pattern="[a-zA-Z]"
-        maxlength="4"
-        error-message="Invalid"
+        id="codeInput"
+        maxlength="[[_partyCodeFormat.length]]"
+        pattern="[[_partyCodeFormat.allowedInput]]"
+        error-message="[[_errorMessage]]"
         on-value-changed="_codeInputChanged"></paper-input>
 
-    <paper-button raised hidden$="[[user]]" on-tap="_login">Sign-in with Google</paper-button>
+    <h1>pid: [[_storedId]]</h1>
 
   </template>
 
@@ -48,22 +58,60 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       static get properties() {
         return {
-          user: Object
+          _partyCodeFormat: Object,
+
+          _errorMessage: String,
+          _storedId: String
         }
       }
 
-      _login() {
-        var auth = this.$.auth;
-        auth.refreshNetworkStatus();
-        if (auth.online)
-          auth.signInWithRedirect();
+      _codeInputChanged(_, e) {
+        const codeInput = this.$.codeInput;
+        codeInput.validate();
+        if (codeInput.invalid) {
+          this._errorMessage = 'Invalid party code format. Party codes are 4 letters ex. \"ABCD\"'
+          return;
+        }
+        if (e.value.length !== codeInput.maxlength) {
+          return;
+        }
+        this._joinPartyWithCode(e.value.toUpperCase())
+          .then(partyId => {
+            this._storeId(partyId);
+          })
+          .catch(err => {
+            this._errorMessage = err;
+            codeInput.invalid = true;
+          });
       }
 
-      _codeInputChanged(_, e) {
-        if (e.value.length !== 4)
-          return;
-        console.log(e.value.toUpperCase());
+      _joinPartyWithCode(code) {
+        if (!this._partyCodeFormat.exactFormat.test(code)) return;
+
+        return new Promise((resolve, reject) => {
+          this.$.query.ref.child(code).once('value', (snapshot) => {
+            const partyId = snapshot.val();
+            partyId ? resolve(partyId) : reject('Party not found');
+          })
+          .catch(err => {
+            console.error(err);
+            reject('Some database error occured :(');
+          });
+        });
       }
+
+      _storeId(id) {
+        this._storedId = id;
+        this.$.idStorage.transactionsComplete.then(_ => {
+          this.dispatchEvent(new CustomEvent('set-route', {detail:   {path: 'view2'},
+                                                           bubbles:  true, 
+                                                           composed: true}));
+        })
+        .catch(err => {
+          console.error(err);
+        });
+      }
+      
     }
 
     window.customElements.define(MyView1.is, MyView1);
