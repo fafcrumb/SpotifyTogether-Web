@@ -3,10 +3,8 @@
   "shell": "src/my-app.html",
   "fragments": [
     "src/my-view1.html",
-    "src/my-view2.html",
+    "src/my-queue.html",
     "src/my-view3.html",
-    "src/login-view.html",
-    "src/main-app-view.html",
     "src/my-view404.html"
   ],
   "sources": [

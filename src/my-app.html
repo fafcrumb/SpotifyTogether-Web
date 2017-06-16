@@ -1,8 +1,6 @@
 
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
 <link rel="import" href="../bower_components/polymerfire/firebase-app.html">
-<link rel="import" href="../bower_components/polymerfire/firebase-auth-script.html">
-<link rel="import" href="../bower_components/polymerfire/firebase-database-script.html">
 <link rel="import" href="../bower_components/polymerfire/firebase-auth.html">
 <link rel="import" href="../bower_components/app-storage/app-localstorage/app-localstorage-document.html">
 <link rel="import" href="../bower_components/app-layout/app-drawer/app-drawer.html">
@@ -25,7 +23,7 @@
 <link rel="import" href="my-icons.html">
 
 <link rel="lazy-import" href="my-view1.html">
-<link rel="lazy-import" href="my-view2.html">
+<link rel="lazy-import" href="my-queue.html">
 <link rel="lazy-import" href="my-view3.html">
 <link rel="lazy-import" href="my-view404.html">
 
@@ -104,7 +102,7 @@
         data="{{_storedId}}"></app-localstorage-document>
 
     <app-location route="{{route}}"></app-location>
-        
+
     <app-route
         route="{{route}}"
         pattern="[[rootPattern]]:page"
@@ -122,7 +120,7 @@
         <app-toolbar>Menu</app-toolbar>
         <iron-selector id="drawerList" selected="[[page]]" attr-for-selected="name" role="navigation">
           <a name="view1" href="view1">View One</a>
-          <a name="view2" href="view2">View Two</a>
+          <a name="queue" href="queue">Queue</a>
           <a name="view3" href="view3">View Three</a>
         </iron-selector>
       </app-drawer>
@@ -149,7 +147,7 @@
             fallback-selection="view404"
             role="main">
           <my-view1 name="view1"></my-view1>
-          <my-view2 name="view2"></my-view2>
+          <my-queue name="queue"></my-queue>
           <my-view3 name="view3"></my-view3>
           <my-view404 name="view404"></my-view404>
         </iron-pages>
@@ -173,28 +171,28 @@
 
           loading: {
             type: Boolean,
-            computed: '_computeLoading(_authStatusKnown, _pageLoaded)'
+            computed: '_computeLoading(_authStatusKnown, _pageLoaded)',
           },
 
           _pageLoaded: Boolean,
 
           _storedId: {
             type: String,
-            value: ''
+            value: '',
           },
 
           _storageStatusKnown: Boolean,
           _authStatusKnown: Boolean,
-          
+
           rootPattern: String,
 
           subRoute: String,
           routeData: Object,
 
-          //meta
+          // meta
           phoneMaxWidth: {
             type: String,
-            value: 'max-width: 640px'
+            value: 'max-width: 640px',
           },
 
           partyCodeFormat: {
@@ -202,8 +200,8 @@
             value: {
               allowedInput: '^[a-zA-Z]+$',
               exactFormat: new RegExp('^[A-Z]{4}$'),
-              length: 4
-            }
+              length: 4,
+            },
           },
 
         };
@@ -219,9 +217,13 @@
       constructor() {
         super();
 
+        Polymer.RenderStatus.afterNextRender('my-app-render', () => {
+          this.dispatchEvent(new CustomEvent('rendered'));
+        });
+
         this.rootPattern = (new URL(this.rootPath)).pathname;
-        
-        this.addEventListener('set-route', e => this._setRouteListener(e));
+
+        this.addEventListener('set-route', (e) => this._setRouteListener(e));
       }
 
       connectedCallback() {
@@ -240,14 +242,14 @@
         }
 
         this.page = page || 'view1';
-        
+
         this._closeDrawer();
       }
 
       _closeDrawer() {
         if (this.$.drawer.persistent) return;
-        requestAnimationFrame(_ => {
-          requestAnimationFrame(_ => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
             this.$.drawer.close();
           });
         });
@@ -264,7 +266,7 @@
             this._showPage404.bind(this),
             true);
       }
-      
+
       _pageLoadedCallback() {
         this._pageLoaded = true;
       }
@@ -279,16 +281,18 @@
         if (fromPage ? this.page === fromPage : this.page !== toPage)
           this.set('route.path', toPage);
         else
-          this._pageChanged(this.page); // If page hasn't changed, manually trigger page load
+          // If page hasn't changed, manually trigger page load
+          this._pageChanged(this.page);
       }
 
       _checkStorage() {
-        this.$.idStorage.transactionsComplete.then(_ => {
+        this.$.idStorage.transactionsComplete.then(() => {
           this._storageStatusKnown = true;
 
-          // If we have a party ID
-          this._storedId.length ? this._redirectPage('view2', 'view1') // Redirect view1 to view2
-                                : this._redirectPage('view1'); // Otherwise, redirect all routes to view1
+          // If we have a party ID, redirect view1 to queue
+          this._storedId.length ? this._redirectPage('queue', 'view1')
+                                  // Otherwise, redirect all routes to view1
+                                : this._redirectPage('view1');
         });
       }
 
@@ -304,24 +308,24 @@
       }
 
       _logoutButtonClicked() {
-        requestAnimationFrame(_ => {
-          requestAnimationFrame(_ => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
             this.logout();
           });
         });
       }
 
       _computeOverlayClass(loading) {
-        return loading ? '' : 'hidden'
+        return loading ? '' : 'hidden';
       }
 
       _computeLoading(...args) {
         // Returns true if at least one argument is false
-        return args.some(el => !el);
+        return args.some((el) => !el);
       }
 
       _authStatus(_authStatusKnown, user) {
-        //nothing here yet ):
+        // nothing here yet ):
       }
 
     }

@@ -3,6 +3,7 @@
     "node": true
   },
   "rules": {
-    "no-unused-vars": "off"
+    "no-console": "off",
+    "max-len": ["error", {"ignoreStrings": true}]
   }
 }

@@ -1,13 +1,3 @@
-<!--
-@license
-Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
-This key may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-key distributed by Google as part of the polymer project is also
-subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
--->
-
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
 <link rel="import" href="../bower_components/polymerfire/firebase-query.html">
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
@@ -61,25 +51,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           _partyCodeFormat: Object,
 
           _errorMessage: String,
-          _storedId: String
-        }
+          _storedId: String,
+        };
       }
 
       _codeInputChanged(_, e) {
         const codeInput = this.$.codeInput;
         codeInput.validate();
         if (codeInput.invalid) {
-          this._errorMessage = 'Invalid party code format. Party codes are 4 letters ex. \"ABCD\"'
+          this._errorMessage = 'Invalid party code format.' +
+                               ' Party codes are 4 letters ex. \"ABCD\"';
           return;
         }
         if (e.value.length !== codeInput.maxlength) {
           return;
         }
         this._joinPartyWithCode(e.value.toUpperCase())
-          .then(partyId => {
+          .then((partyId) => {
             this._storeId(partyId);
           })
-          .catch(err => {
+          .catch((err) => {
             this._errorMessage = err;
             codeInput.invalid = true;
           });
@@ -93,7 +84,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             const partyId = snapshot.val();
             partyId ? resolve(partyId) : reject('Party not found');
           })
-          .catch(err => {
+          .catch((err) => {
             console.error(err);
             reject('Some database error occured :(');
           });
@@ -102,16 +93,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       _storeId(id) {
         this._storedId = id;
-        this.$.idStorage.transactionsComplete.then(_ => {
-          this.dispatchEvent(new CustomEvent('set-route', {detail:   {path: 'view2'},
-                                                           bubbles:  true, 
-                                                           composed: true}));
+        this.$.idStorage.transactionsComplete.then(() => {
+          this.dispatchEvent(new CustomEvent('set-route',
+                                             {detail: {path: 'queue'},
+                                              composed: true}));
         })
-        .catch(err => {
+        .catch((err) => {
           console.error(err);
         });
       }
-      
+
     }
 
     window.customElements.define(MyView1.is, MyView1);

@@ -9,6 +9,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 -->
 
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/app-storage/app-localstorage/app-localstorage-document.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
 <link rel="import" href="shared-styles.html">
 
 <dom-module id="my-view3">
@@ -20,17 +23,40 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
     </style>
 
-    <div class="card">
-      <div class="circle">3</div>
-      <h1>View Three</h1>
-      <p>Modus commodo minimum eum te, vero utinam assueverit per eu.</p>
-      <p>Ea duis bonorum nec, falli paulo aliquid ei eum.Has at minim mucius aliquam, est id tempor laoreet.Pro saepe pertinax ei, ad pri animal labores suscipiantur.</p>
-    </div>
+    <iron-ajax
+        url="/functions/spotifyauth"
+        handle-as="json"
+        on-response="_handleAuthResponse"></iron-ajax>
+      
+    <app-localstorage-document
+        id="tokenStorage"
+        key="access_token"
+        data="{{_storedToken}}"></app-localstorage-document>
+
+    <paper-input on-value-changed="_searchChanged"></paper-input>
+
   </template>
 
   <script>
     class MyView3 extends Polymer.Element {
       static get is() { return 'my-view3'; }
+
+      static get properties() {
+        return {
+          _storedToken: {
+            type: String,
+            value: ''
+          }
+        }
+      }
+
+      _searchChanged(_, e) {
+        console.log(e.value);
+      }
+
+      _handleAuthResponse(e) {
+        console.log(e.detail.response);
+      }
     }
 
     window.customElements.define(MyView3.is, MyView3);

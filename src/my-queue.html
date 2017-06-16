@@ -1,0 +1,57 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/app-storage/app-localstorage/app-localstorage-document.html">
+<link rel="import" href="../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../bower_components/paper-item/paper-item-body.html">
+<link rel="import" href="../bower_components/paper-material/paper-material.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-query.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="my-queue">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+      }
+    </style>
+
+    <app-localstorage-document 
+        id="idStorage"
+        key="party:id"
+        data="{{_partyId}}"></app-localstorage-document>
+
+    <firebase-query id="query"
+      path="/songs/[[_partyId]]"
+      data="{{songs}}">
+    </firebase-query>
+
+    <template is="dom-repeat" items="[[songs]]" as="song" index-as="index" initial-count="10" target-framerate="60">
+
+      <paper-material elevation="1">
+        <paper-item>
+          <paper-item-body two-line>
+            <div>[[song.name]]</div>
+            <div secondary>[[song.artist]]</div>
+          </paper-item-body>
+        </paper-item>
+      </paper-material>
+
+    </template>
+
+  </template>
+
+  <script>
+    class MyQueue extends Polymer.Element {
+
+      static get is() { return 'my-queue'; }
+
+      static get properties() {
+        return {
+          _partyId: String,
+        };
+      }
+
+    }
+
+    window.customElements.define(MyQueue.is, MyQueue);
+  </script>
+</dom-module>

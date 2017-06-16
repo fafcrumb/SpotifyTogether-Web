@@ -79,7 +79,7 @@
     <div id="skeleton">
       <div class="header"></div>
     </div>
-    <my-app></my-app>
+    <my-app id="app"></my-app>
     <noscript>
       <style>
         #noscript-container {
@@ -90,5 +90,11 @@
         <h1 id="noscript-msg">Spotify Together needs Javascript to run</h1>
       </div>
     </noscript>
+    <script>
+      // Hide first render skeleton after my-app renders
+      document.getElementById('app').addEventListener('rendered', (e) => {
+        document.getElementById('skeleton').style.display = 'none';
+      });
+    </script>
   </body>
 </html>
