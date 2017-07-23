@@ -10,10 +10,11 @@
     "lint": "eslint . --ext js,html --ignore-path .gitignore",
     "test": "npm run lint && polymer test -l chrome",
     "polyserve": "polymer serve -p 8080",
-    "polyserve-build": "polymer serve build/default -p 8080",    
-    "serve": "npm run polyserve & npm run watch",
+    "polyserve-build": "polymer serve build/default -p 8080",
+    "fireserve": "firebase serve --only functions,hosting",
+    "serve": "npm run fireserve & npm run watch",
     "serve-build": "npm run polyserve-build & npm run watch",
-    "watch": "browser-sync start --proxy 127.0.0.1:8080 --no-open --files 'index.html, src/**/*.html, *.json, images/*'",
+    "watch": "browser-sync start --proxy localhost:5000 --no-open --files 'index.html, src/**/*.html, *.json, images/*'",
     "build": "npm run lint && polymer build"
   }
 }

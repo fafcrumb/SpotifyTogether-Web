@@ -1,5 +1,5 @@
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
-<link rel="import" href="../bower_components/polymerfire/firebase-query.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-auth.html">
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../bower_components/iron-meta/iron-meta.html">
@@ -21,14 +21,9 @@
       }
     </style>
 
-    <firebase-query id="query" path="/party_keys"></firebase-query>
+    <firebase-auth id="auth" user="{{user}}"></firebase-auth>
     
     <iron-meta key="partyCodeFormat" value="{{_partyCodeFormat}}"></iron-meta>
-    
-    <app-localstorage-document
-        id="idStorage"
-        key="party:id"
-        data="{{_storedId}}"></app-localstorage-document>
 
     <paper-input
         id="codeInput"
@@ -37,7 +32,7 @@
         error-message="[[_errorMessage]]"
         on-value-changed="_codeInputChanged"></paper-input>
 
-    <h1>pid: [[_storedId]]</h1>
+    <h1>pid: [[partyId]]</h1>
 
   </template>
 
@@ -48,58 +43,71 @@
 
       static get properties() {
         return {
+          partyId: String,
           _partyCodeFormat: Object,
-
           _errorMessage: String,
-          _storedId: String,
         };
       }
 
       _codeInputChanged(_, e) {
         const codeInput = this.$.codeInput;
+        const code = e.value;
         codeInput.validate();
         if (codeInput.invalid) {
           this._errorMessage = 'Invalid party code format.' +
                                ' Party codes are 4 letters ex. \"ABCD\"';
           return;
         }
-        if (e.value.length !== codeInput.maxlength) {
+        if (code.length !== codeInput.maxlength) {
           return;
         }
-        this._joinPartyWithCode(e.value.toUpperCase())
-          .then((partyId) => {
-            this._storeId(partyId);
-          })
-          .catch((err) => {
-            this._errorMessage = err;
-            codeInput.invalid = true;
-          });
+
+        this._getPartyIdFromCode(code.toUpperCase()).then((partyId) => {
+          if (!this.user) {
+            return this.$.auth.signInAnonymously().then((user) => {
+              return firebase.database().ref(`users/${user.uid}`).set({
+                isAnonymous: true
+              });
+            }).then(() => {
+              return partyId;
+            });
+          } else {
+            return partyId;
+          }
+        }).then((partyId) => {
+          return this._joinPartyWithId(partyId, this.user);
+        }).then(() => {
+          this.dispatchEvent(new CustomEvent('set-route',
+                                             {detail: {path: 'queue'},
+                                              composed: true}));
+        }).catch((err) => {
+          console.log(err.message);
+          this._errorMessage = err.message === 'Party not found' ? 
+                               err.message : 
+                               'Error joining party ):';
+          codeInput.invalid = true;
+        });
       }
 
-      _joinPartyWithCode(code) {
-        if (!this._partyCodeFormat.exactFormat.test(code)) return;
-
+      _getPartyIdFromCode(code) {
         return new Promise((resolve, reject) => {
-          this.$.query.ref.child(code).once('value', (snapshot) => {
+          firebase.database().ref('party_keys').child(code).once('value', (snapshot) => {
             const partyId = snapshot.val();
-            partyId ? resolve(partyId) : reject('Party not found');
-          })
-          .catch((err) => {
-            console.error(err);
-            reject('Some database error occured :(');
+            partyId ? resolve(partyId) : reject(new Error('Party not found'));
+          }).catch((err) => {
+            reject(new Error(`Error getting party id: ${err.message}`));
           });
         });
       }
 
-      _storeId(id) {
-        this._storedId = id;
-        this.$.idStorage.transactionsComplete.then(() => {
-          this.dispatchEvent(new CustomEvent('set-route',
-                                             {detail: {path: 'queue'},
-                                              composed: true}));
-        })
-        .catch((err) => {
-          console.error(err);
+      _joinPartyWithId(partyId, user) {
+        return firebase.database().ref(`users/${user.uid}`).update({
+          party: partyId,
+          host: false
+        }).then(() => {
+          return firebase.database().ref(`members/${partyId}/${user.uid}`).set({
+            isAnonymous: user.isAnonymous
+          });
         });
       }
 

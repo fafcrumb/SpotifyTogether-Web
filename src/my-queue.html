@@ -1,9 +1,12 @@
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
-<link rel="import" href="../bower_components/app-storage/app-localstorage/app-localstorage-document.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="../bower_components/paper-item/paper-item.html">
 <link rel="import" href="../bower_components/paper-item/paper-item-body.html">
 <link rel="import" href="../bower_components/paper-material/paper-material.html">
+<link rel="import" href="../bower_components/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="../bower_components/polymerfire/firebase-query.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-document.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-auth.html">
 <link rel="import" href="shared-styles.html">
 
 <dom-module id="my-queue">
@@ -14,23 +17,49 @@
       }
     </style>
 
-    <app-localstorage-document 
-        id="idStorage"
-        key="party:id"
-        data="{{_partyId}}"></app-localstorage-document>
+    <firebase-auth id="auth" user="{{user}}"></firebase-auth>
 
-    <firebase-query id="query"
-      path="/songs/[[_partyId]]"
-      data="{{songs}}">
-    </firebase-query>
+    <firebase-document
+        id="fbSpotifyTokenDoc"
+        path="/spotify/client_credentials"
+        data="{{_spotifyCredentials}}"></firebase-document>
 
-    <template is="dom-repeat" items="[[songs]]" as="song" index-as="index" initial-count="10" target-framerate="60">
+    <firebase-query
+        id="fbTracksQuery"
+        order-by-child="added_at"
+        path="/tracks/[[partyId]]"
+        on-data-changed="test"
+        on-path-changed="tet"
+        data="{{_tracks}}"></firebase-query>
+
+    <iron-ajax
+        id="tracksApi"
+        url$="https://api.spotify.com/v1/tracks/[[testId]]"
+        headers$='{"Authorization": "Bearer [[_spotifyCredentials.access_token]]"}'
+        handle-as="json"
+        last-response="{{_response}}"
+        reject-with-request
+        debounce-duration="300"></iron-ajax>
+
+    <template
+        is="dom-repeat"
+        id="queueRepeat"
+        items="[[_tracks]]"
+        as="track"
+        index-as="index"
+        initial-count="5"
+        target-framerate="60">
 
       <paper-material elevation="1">
         <paper-item>
           <paper-item-body two-line>
-            <div>[[song.name]]</div>
-            <div secondary>[[song.artist]]</div>
+            <div>[[track.name]]</div>
+            <div secondary>
+              <paper-checkbox
+                  checked="[[_computeChecked(track.votes)]]"
+                  on-change="_trackChecked"></paper-checkbox>
+              [[_computeVoteCount(track.votes)]]
+              [[track.artist]] • [[track.album]]</div>
           </paper-item-body>
         </paper-item>
       </paper-material>
@@ -46,8 +75,67 @@
 
       static get properties() {
         return {
-          _partyId: String,
+          partyId: {
+            type: String,
+            observer: '_partyIdChanged'
+          },
+          _testArray: {
+            type: Array,
+            value: () => {return []},
+          },
         };
+      }
+
+      _partyIdChanged(id) {
+        console.log(id);
+      }
+
+      _computeChecked(votes) {
+        return votes && votes[this.user.uid];
+      }
+
+      _computeVoteCount(votes) {
+        return votes ? Object.keys(votes).length : 0;
+      }
+  
+      _trackChecked(e) {
+        //if (!user || user.isAnonymous) {
+        //  return;
+        //}
+        
+        const model = this.$.queueRepeat.modelForElement(e.target);
+        const ref = firebase.database().ref(`/tracks/${this.partyId}/${model.track.$key}/votes`);
+
+        this._toggleVote(ref, this.user.uid);
+      }
+
+      _toggleVote(trackRef, uid) {
+        return trackRef.child(uid).once('value').then((snapshot) => {
+          const vote = snapshot.val() ? null : true;
+          return trackRef.child(uid).set(vote);
+        }).catch((err) => {
+          console.log('Error voting', err.message);
+        });
+      }
+
+      test(_, newData) {
+        //let x = newData;
+        //console.log(newData);
+        /*if (x.path && x.path === 'data.splices' && x.value.indexSplices[0].addedCount) {
+          x = x.value.indexSplices[0];
+          //console.log(x);
+          this.testId = x.object[x.index].id;
+          this.$.tracksApi.generateRequest().completes.then((req) => {
+            const newOb = x.object[x.index];
+            newOb.detail = req.response;
+            this.push('_testArray', newOb);
+            this.$.queueRepeat.render();
+          });
+        }*/
+      }
+
+      tet(_, path) {
+        console.log(path);
       }
 
     }
