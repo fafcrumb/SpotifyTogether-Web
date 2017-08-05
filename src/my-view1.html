@@ -65,9 +65,7 @@
         this._getPartyIdFromCode(code.toUpperCase()).then((partyId) => {
           if (!this.user) {
             return this.$.auth.signInAnonymously().then((user) => {
-              return firebase.database().ref(`users/${user.uid}`).set({
-                isAnonymous: true
-              });
+              return dblib.addUser(user);
             }).then(() => {
               return partyId;
             });
@@ -75,11 +73,7 @@
             return partyId;
           }
         }).then((partyId) => {
-          return this._joinPartyWithId(partyId, this.user);
-        }).then(() => {
-          this.dispatchEvent(new CustomEvent('set-route',
-                                             {detail: {path: 'queue'},
-                                              composed: true}));
+          return dblib.joinParty(partyId, this.user.uid);
         }).catch((err) => {
           console.log(err.message);
           this._errorMessage = err.message === 'Party not found' ? 
@@ -99,18 +93,6 @@
           });
         });
       }
-
-      _joinPartyWithId(partyId, user) {
-        return firebase.database().ref(`users/${user.uid}`).update({
-          party: partyId,
-          host: false
-        }).then(() => {
-          return firebase.database().ref(`members/${partyId}/${user.uid}`).set({
-            isAnonymous: user.isAnonymous
-          });
-        });
-      }
-
     }
 
     window.customElements.define(MyView1.is, MyView1);

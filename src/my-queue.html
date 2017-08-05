@@ -28,8 +28,6 @@
         id="fbTracksQuery"
         order-by-child="added_at"
         path="/tracks/[[partyId]]"
-        on-data-changed="test"
-        on-path-changed="tet"
         data="{{_tracks}}"></firebase-query>
 
     <iron-ajax
@@ -77,17 +75,13 @@
         return {
           partyId: {
             type: String,
-            observer: '_partyIdChanged'
           },
+
           _testArray: {
             type: Array,
             value: () => {return []},
           },
         };
-      }
-
-      _partyIdChanged(id) {
-        console.log(id);
       }
 
       _computeChecked(votes) {
@@ -116,26 +110,6 @@
         }).catch((err) => {
           console.log('Error voting', err.message);
         });
-      }
-
-      test(_, newData) {
-        //let x = newData;
-        //console.log(newData);
-        /*if (x.path && x.path === 'data.splices' && x.value.indexSplices[0].addedCount) {
-          x = x.value.indexSplices[0];
-          //console.log(x);
-          this.testId = x.object[x.index].id;
-          this.$.tracksApi.generateRequest().completes.then((req) => {
-            const newOb = x.object[x.index];
-            newOb.detail = req.response;
-            this.push('_testArray', newOb);
-            this.$.queueRepeat.render();
-          });
-        }*/
-      }
-
-      tet(_, path) {
-        console.log(path);
       }
 
     }

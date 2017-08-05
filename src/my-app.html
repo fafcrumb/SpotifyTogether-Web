@@ -1,6 +1,5 @@
 
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
-<link rel="import" href="../bower_components/polymerfire/firebase-app.html">
 <link rel="import" href="../bower_components/polymerfire/firebase-auth.html">
 <link rel="import" href="../bower_components/polymerfire/firebase-document.html">
 <link rel="import" href="../bower_components/app-layout/app-drawer/app-drawer.html">
@@ -19,6 +18,7 @@
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="dblib.html">
 <link rel="import" href="app-theme.html">
 <link rel="import" href="my-icons.html">
 
@@ -85,12 +85,6 @@
       }
     </style>
 
-    <firebase-app
-        id="firebase"
-        auth-domain="spotify-party-da303.firebaseapp.com"
-        database-url="https://spotify-party-da303.firebaseio.com/"
-        api-key="AIzaSyBJxf-hJa7RQVBPYkdjt27yBcDj0b1tG8o"></firebase-app>
-
     <firebase-auth
         id="auth"
         provider="google"
@@ -100,6 +94,7 @@
     <firebase-document
         id="fbPartyIdDoc"
         path="/users/[[user.uid]]/party"
+        path="[[_computePartyIdDocPath(user.uid)]]"
         data="{{_syncedPartyId}}"></firebase-document>
 
     <app-location route="{{route}}"></app-location>
@@ -138,6 +133,7 @@
           <app-toolbar>
             <paper-icon-button id="hamburgerIcon" icon="my-icons:menu" drawer-toggle></paper-icon-button>
             <div main-title>Spotify Together</div>
+            <paper-button raised hidden$="[[!partyId]]" on-tap="_leaveButtonClicked">Leave</paper-button>
             <paper-button raised hidden$="[[_isSignedIn(user)]]" on-tap="_login">Sign-in</paper-button>
             <paper-button raised hidden$="[[!_isSignedIn(user)]]" on-tap="_logout">Logout</paper-button>
           </app-toolbar>
@@ -148,7 +144,7 @@
             attr-for-selected="name"
             fallback-selection="view404"
             role="main">
-          <my-view1 name="view1" party-id="[[partyId]]"></my-view1>
+          <my-view1 id="view1" name="view1" party-id="[[partyId]]"></my-view1>
           <my-queue name="queue" party-id="[[partyId]]"></my-queue>
           <my-view3 name="view3" party-id="[[partyId]]"></my-view3>
           <my-view404 name="view404"></my-view404>
@@ -178,7 +174,14 @@
 
           partyId: {
             type: String,
-            computed: '_computePartyId(_syncedPartyId)'
+            computed: '_computePartyId(_syncedPartyId)',
+          },
+
+          appInitialized: {
+            type: Function,
+            value: () => {
+              return Promise.resolve();
+            }
           },
 
           syncedPartyId: Object,
@@ -212,7 +215,6 @@
       static get observers() {
         return [
           '_authStatus(_authStatusKnown, user)',
-          '_routePageChanged(routeData.page)',
         ];
       }
 
@@ -225,45 +227,45 @@
 
         this.rootPattern = (new URL(this.rootPath)).pathname;
 
-        this.addEventListener('set-route', (e) => this._setRouteListener(e));
+        this.appInitialized = this.appInitialized
+        .then(this._handleRedirect.bind(this))
+        .then(this._attatchObservers.bind(this));
       }
 
       connectedCallback() {
         super.connectedCallback();
-
-        this.check();
-      }
-
-      _setRouteListener(e) {
-        this.set('route.path', e.detail.path);
       }
 
       _routePageChanged(page) {
         if (page === undefined) {
           return;
         }
-        this._partyIdAvailable().then((partyId) => {
-          if (partyId) {
-            if (page === 'view1') {
-              this.set('route.path', 'queue');
-              return;
-            }
-          } else {
-            if (page !== 'view1') {
-              this.set('route.path', 'view1');
-              return;
-            }
+
+        if (this._partyStatusRedirect(this.partyId, page)) {
+          return;
+        }
+
+        this.page = page || 'view1';
+
+        this._closeDrawer();
+      }
+
+      _partyStatusRedirect(partyId, page) {
+        if (partyId) {
+          if (page === 'view1') {
+            this.set('route.path', 'queue');
+            return true;
           }
-
-          this.page = page || 'view1';
-
-          this._closeDrawer();
-        });
+        } else if (page !== 'view1') {
+          this.set('route.path', 'view1');
+          return true;
+        }
+        return false;
       }
 
       _closeDrawer() {
         if (this.$.drawer.persistent) return;
-          this.$.drawer.close();
+        this.$.drawer.close();
       }
 
       _pageChanged(page) {
@@ -296,98 +298,68 @@
         }
       }
 
-      _partyIdAvailable() {
-        return new Promise((resolve, reject) => {
-          if (this.partyId) {
-            return resolve(this.partyId);
-          }
-          const unsubscribe = firebase.auth().onAuthStateChanged((result) => {
-            unsubscribe();
-            if (!result) {
-              return resolve(null);
-            }
-            this.$.fbPartyIdDoc.ref.once('value').then((snapshot) => {
-              resolve(snapshot.val());
-            });
+      _logout() {
+        // should use button's on transition end
+        this.$.auth.signOut();
+      }
+
+      _leaveButtonClicked(e) {
+        dblib.leaveParty(this.partyId, this.user.uid);
+      }
+
+      _attatchObservers() {
+        const unsubscribe = firebase.auth().onAuthStateChanged((user) => {
+          unsubscribe();
+
+          Promise.resolve().then(() => {
+            if (user) return dblib.getUserParty(user.uid);
+          }).then(() => {
+            console.log(this.partyId);
+            this._createPropertyObserver('partyId', '_partyIdChanged', true);
+            this._createMethodObserver('_routePageChanged(routeData.page)', true);
+            this._routePageChanged(this.routeData.page);
+            this.$.fbPartyIdDoc.disabled = false;
           });
         });
       }
 
-      check() {
-        firebase.auth().getRedirectResult().then((result) => {
+      _handleRedirect() {
+        return firebase.auth().getRedirectResult().then((result) => {
           const user = result.user;
-          if (!user) {
-            return;
-          }
+          if (!user) return;
 
-          firebase.database().ref(`users/${user.uid}`).once('value').then((snapshot) => {
-            if (!snapshot.val()) {
-              return firebase.database().ref(`users/${user.uid}`).set(true);
+          return dblib.getUser(user.uid).then((result) => {
+            if (!result) {
+              return dblib.addUser(user);
             }
           }).catch((err) => {
-            console.log('Error adding user to db', err.message);
+            console.log('Error adding user', err.message);
           });
         }).catch((err) => {
           console.log(err.message);
-          // Get reference to the currently signed-in user
-          const credential = err.credential;
-          const prevUser = firebase.auth().currentUser;
-          let prevParty = null;
-          let currUser = null;
-          let currParty = null;
-          
-          if (!prevUser) {
-            return;
-          }
 
-          firebase.database().ref(`users/${prevUser.uid}/party`).once('value').then((snapshot) => {
-            prevParty = snapshot.val();
-            let updates = {};
-            updates[`users/${prevUser.uid}`] = null;
-            if (prevParty) {
-              updates[`members/${prevParty}/${prevUser.uid}`] = null;
-            }
-            return firebase.database().ref().update(updates);
-          }).then(() => {
-            return prevUser.delete();
+          const prevUser = firebase.auth().currentUser;
+          if (!prevUser) return;
+          const credential = err.credential;
+          let prevParty = null;
+
+          return dblib.getUserParty(prevUser.uid).then((partyId) => {
+            prevParty = partyId;
+            return dblib.deleteUser(prevUser, prevParty);
           }).catch((err) => {
             console.log('Error deleting user', err.message);
           }).then(() => {
             return this.$.auth.signInWithCredential(credential);
-          }).catch((err) => {
-            console.log('Sign in Error', err.message);
           }).then((user) => {
-            currUser = user;
-            return firebase.database().ref(`users/${currUser.uid}/party`).once('value');
-          }).then((snapshot) => {
-            currParty = snapshot.val();
-            if (prevParty && prevParty !== currParty) {
-              console.log('user set');
-              return firebase.database().ref(`users/${currUser.uid}`).update({
-                party: prevParty,
-                host: false
-              });
-            }
-          }).then((snapshot) => {
-            if (prevParty && currParty && prevParty !== currParty) {
-              console.log('member remove');
-              return firebase.database().ref(`members/${currParty}/${currUser.uid}`).remove();
-            }
-          }).then(() => {
-            if (prevParty && prevParty !== currParty) {
-              console.log('member aadd');
-              return firebase.database().ref(`members/${prevParty}/${currUser.uid}`).set({
-                isAnonymous: false
-              });
-            }
+            return dblib.getUserParty((user.uid)).then((currParty) => {
+              if (prevParty && prevParty !== currParty) {
+                return dblib.switchToParty(user.uid, prevParty, currParty);
+              }
+            });
           }).catch((err) => {
             console.log('Error switching parties', err.message);
           });
         });
-      }
-
-      _logout() {
-        this.$.auth.signOut();
       }
 
       _isSignedIn(user) {
@@ -395,8 +367,18 @@
       }
 
       _computePartyId(syncedId) {
-        // Makes sure the zero value for the id is null
+        // Makes sure the zero-value for the id is null
         return syncedId.length ? syncedId : null;
+      }
+
+      _computePartyIdDocPath(uid) {
+        return dblib.userPartyPath(uid);
+      }
+
+      _partyIdChanged(partyId) {
+        //console.log(partyId);
+        //console.log(this.page);
+        this._partyStatusRedirect(partyId, this.page);
       }
 
       _computeOverlayClass(loading) {
