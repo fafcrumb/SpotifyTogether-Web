@@ -5,7 +5,7 @@
     "src/my-view1.html",
     "src/my-queue.html",
     "src/my-view3.html",
-    "src/my-view404.html"
+    "src/my-404.html"
   ],
   "sources": [
     "src/**/*",
@@ -19,6 +19,9 @@
   "builds": [{
     "name": "default",
     "preset": "es6-unbundled",
+    "js": {
+      "minify": false
+    },
     "swPrecacheConfig": "sw-precache-config.js"
   }],
   "lint": {

@@ -1,5 +1,10 @@
+
 const dblib = {};
-const db = firebase.database();
+let db;
+
+dblib.init = (firebaseDatabase) => {
+  db = firebaseDatabase;
+}
 
 dblib.userPath = (uid) => {
   return `users/${uid}`;

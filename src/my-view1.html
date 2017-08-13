@@ -1,9 +1,9 @@
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
-<link rel="import" href="../bower_components/polymerfire/firebase-auth.html">
-<link rel="import" href="../bower_components/paper-input/paper-input.html">
-<link rel="import" href="../bower_components/paper-button/paper-button.html">
-<link rel="import" href="../bower_components/iron-meta/iron-meta.html">
-<link rel="import" href="../bower_components/app-storage/app-localstorage/app-localstorage-document.html">
+
+
+<link rel="lazy-import" href="../bower_components/iron-meta/iron-meta.html">
+<link rel="lazy-import" href="../bower_components/polymerfire/firebase-auth.html">
+
 <link rel="import" href="shared-styles.html">
 
 <dom-module id="my-view1">
@@ -32,7 +32,7 @@
         error-message="[[_errorMessage]]"
         on-value-changed="_codeInputChanged"></paper-input>
 
-    <h1>pid: [[partyId]]</h1>
+    <input type="text">
 
   </template>
 

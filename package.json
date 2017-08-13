@@ -8,6 +8,7 @@
   },
   "scripts": {
     "lint": "eslint . --ext js,html --ignore-path .gitignore",
+    "polymer-lint": "polymer lint -i src/**",
     "test": "npm run lint && polymer test -l chrome",
     "polyserve": "polymer serve -p 8080",
     "polyserve-build": "polymer serve build/default -p 8080",

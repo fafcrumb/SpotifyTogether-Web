@@ -1,67 +1,111 @@
 
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
-<link rel="import" href="../bower_components/polymerfire/firebase-auth.html">
-<link rel="import" href="../bower_components/polymerfire/firebase-document.html">
-<link rel="import" href="../bower_components/app-layout/app-drawer/app-drawer.html">
-<link rel="import" href="../bower_components/app-layout/app-drawer-layout/app-drawer-layout.html">
 <link rel="import" href="../bower_components/app-layout/app-header/app-header.html">
-<link rel="import" href="../bower_components/app-layout/app-header-layout/app-header-layout.html">
-<link rel="import" href="../bower_components/app-layout/app-scroll-effects/app-scroll-effects.html">
+<link rel="import" href="../bower_components/app-layout/app-scroll-effects/effects/waterfall.html">
 <link rel="import" href="../bower_components/app-layout/app-toolbar/app-toolbar.html">
 <link rel="import" href="../bower_components/app-route/app-location.html">
 <link rel="import" href="../bower_components/app-route/app-route.html">
-<link rel="import" href="../bower_components/iron-pages/iron-pages.html">
-<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
-<link rel="import" href="../bower_components/iron-selector/iron-selector.html">
-<link rel="import" href="../bower_components/iron-media-query/iron-media-query.html">
 <link rel="import" href="../bower_components/iron-meta/iron-meta.html">
-<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
-<link rel="import" href="../bower_components/paper-button/paper-button.html">
-<link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
-<link rel="import" href="dblib.html">
-<link rel="import" href="app-theme.html">
-<link rel="import" href="my-icons.html">
+<link rel="import" href="../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="../bower_components/iron-selector/iron-selector.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../bower_components/iron-media-query/iron-media-query.html">
+<link rel="import" href="../bower_components/paper-spinner/paper-spinner-lite.html">
 
-<link rel="lazy-import" href="my-view1.html">
+<!--<link rel="import" href="../bower_components/polymerfire/firebase-app.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-auth.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-document.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-query.html">
+<link rel="import" href="dblib.html">-->
+
+<link rel="lazy-import" href="../bower_components/polymerfire/firebase-app.html">
+<link rel="lazy-import" href="../bower_components/polymerfire/firebase-auth.html">
+<link rel="lazy-import" href="../bower_components/polymerfire/firebase-document.html">
+<link rel="lazy-import" href="../bower_components/polymerfire/firebase-query.html">
+<link rel="lazy-import" href="dblib.html">
+<link rel="lazy-import" href="../bower_components/app-layout/app-drawer/app-drawer.html">
+<link rel="lazy-import" href="../bower_components/app-layout/app-header-layout/app-header-layout.html">
+<link rel="lazy-import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="lazy-import" href="../bower_components/paper-button/paper-button.html">
+
+<link rel="import" href="dblib.html">
+
+<link rel="lazy-import" href="my-icons.html">
+
+<link rel="import" href="my-view1.html">
 <link rel="lazy-import" href="my-queue.html">
 <link rel="lazy-import" href="my-view3.html">
-<link rel="lazy-import" href="my-view404.html">
+<link rel="lazy-import" href="my-404.html">
 
 <dom-module id="my-app">
   <template>
     <style>
       :host {
         display: block;
+        position: relative;
+        padding-top: 64px;
+        padding-bottom: 64px;
+        min-height: 100vh;
+
+        --primary-color: #1DB954; /* Spotify green */
+        --accent-color: #1DB954;
+        --app-bar-color: #212121;
+        --card-color: #424242;
+        --divider-color: rgba(255, 255, 255, 0.12);
+        --primary-text-color: #FFFFFF;
+        --secondary-text-color: rgba(255, 255, 255, 0.7);
+        --icon-color: #FFFFFF;
+        --secondary-color: #9E9E9E;
+        --primary-background-color: #303030;
+        --disabled-text-color: rgba(255, 255, 255, 0.5);
+        --disabled-icon-color: rgba(255, 255, 255, 0.5);
+        --error-color: #DD2C00;
+
+        color: var(--primary-text-color);
+      }
+
+      [hidden] {
+        display: none !important;
       }
 
       #loadingOverlay {
         @apply --layout;
-        @apply --layout-fit;
         @apply --layout-center-center;
 
+        position: absolute;
+        top: 20px;
+        height: 100vh;
+        width: 100%;
         z-index: 1;
-        opacity: 1;
-        margin-top: 64px;
-        visibility: visible;
-        transition: none;
         background: var(--primary-background-color);
       }
 
       #loadingOverlay.hidden {
-        opacity: 0;
-        visibility: hidden;
-        transition: visibility 0.4s, opacity 0.4s linear;
+        display: none;
       }
 
       #header {
+        @apply --layout-fixed-top;
+        z-index: 2;
         background-color: var(--app-bar-color);
+        --app-header-shadow: {
+          box-shadow: inset 0px 5px 6px -3px rgba(0, 0, 0, 0.2);
+          height: 10px;
+          bottom: -10px;
+        };
       }
 
-      #hamburgerIcon {
-        --paper-icon-button-ink-color: var(--icon-color);
+      paper-icon-button {
+        color: var(--icon-color);
+      }
+
+      #toolbar {
+        position: relative;
       }
 
       #drawer {
+        z-index: 3;
+
         --app-drawer-content-container: {
           background-color: var(--card-color);
         }
@@ -83,7 +127,19 @@
         color: var(--primary-text-color);
         font-weight: bold;
       }
+    
+      iron-pages {
+        max-width: 1440px;
+        margin: 0 auto;
+      }
+
     </style>
+
+    <firebase-app
+        api-key="AIzaSyBJxf-hJa7RQVBPYkdjt27yBcDj0b1tG8o"
+        auth-domain="spotify-party-da303.firebaseapp.com"
+        database-url="https://spotify-party-da303.firebaseio.com/"
+        on-firebase-app-initialized="_appInitialized"></firebase-app>
 
     <firebase-auth
         id="auth"
@@ -101,7 +157,7 @@
 
     <app-route
         route="{{route}}"
-        pattern="[[rootPattern]]:page"
+        pattern="/:page"
         data="{{routeData}}"
         tail="{{subRoute}}"></app-route>
 
@@ -110,51 +166,43 @@
 
     <iron-media-query query="[[phoneMaxWidth]]" query-matches="{{smallScreen}}"></iron-media-query>
 
-    <app-drawer-layout fullbleed force-narrow="true">
-      <!-- Drawer content -->
-      <app-drawer id="drawer" slot="drawer" transition-duration="400" swipe-open="[[smallScreen]]">
-        <app-toolbar>Menu</app-toolbar>
-        <iron-selector id="drawerList" selected="[[page]]" attr-for-selected="name" role="navigation">
-          <a name="view1" href="view1">View One</a>
-          <a name="queue" href="queue">Queue</a>
-          <a name="view3" href="view3">View Three</a>
-        </iron-selector>
-      </app-drawer>
+    <!-- Loading spinner overlay -->
+    <div id="loadingOverlay" class$="[[_computeOverlayClass(loading)]]">
+      <paper-spinner-lite id="loadingSpinner" active="[[loading]]"></paper-spinner-lite>
+    </div>
 
-      <!-- Loading spinner overlay -->
-      <div id="loadingOverlay" class$="[[_computeOverlayClass(loading)]]">
-        <paper-spinner id="loadingSpinner" active="[[loading]]"></paper-spinner>
-      </div>
+    <app-header id="header" role="navigation" condenses reveals effects="waterfall">
+      <app-toolbar id="toolbar">
+        <paper-icon-button id="hamburgerIcon" icon="my-icons:menu" on-click="_toggleDrawer"></paper-icon-button>
+        <div main-title>Spotify Together</div>
+        <paper-button raised hidden$="[[!partyId]]" on-tap="_leaveButtonClicked">Leave</paper-button>
+        <paper-button raised hidden$="[[_isSignedIn(user)]]" on-tap="_login">Sign-in</paper-button>
+        <paper-button raised hidden$="[[!_isSignedIn(user)]]" on-tap="_logout">Logout</paper-button>
+      </app-toolbar>
+    </app-header>
 
-      <!-- Main content -->
-      <app-header-layout>
+    <app-drawer id="drawer" opened="{{drawerOpened}}" swipe-open="[[smallScreen]]" transition-duration="400" tabindex="0">
+      <app-toolbar>Menu</app-toolbar>
+      <iron-selector id="drawerList" selected="[[page]]" attr-for-selected="name" role="navigation">
+        <a name="view1" href="view1">View One</a>
+        <a name="queue" href="queue">Queue</a>
+        <a name="view3" href="view3">View Three</a>
+      </iron-selector>
+    </app-drawer>
 
-        <app-header id="header" slot="header" condenses reveals effects="waterfall">
-          <app-toolbar>
-            <paper-icon-button id="hamburgerIcon" icon="my-icons:menu" drawer-toggle></paper-icon-button>
-            <div main-title>Spotify Together</div>
-            <paper-button raised hidden$="[[!partyId]]" on-tap="_leaveButtonClicked">Leave</paper-button>
-            <paper-button raised hidden$="[[_isSignedIn(user)]]" on-tap="_login">Sign-in</paper-button>
-            <paper-button raised hidden$="[[!_isSignedIn(user)]]" on-tap="_logout">Logout</paper-button>
-          </app-toolbar>
-        </app-header>
-
-        <iron-pages
-            selected="[[page]]"
-            attr-for-selected="name"
-            fallback-selection="view404"
-            role="main">
-          <my-view1 id="view1" name="view1" party-id="[[partyId]]"></my-view1>
-          <my-queue name="queue" party-id="[[partyId]]"></my-queue>
-          <my-view3 name="view3" party-id="[[partyId]]"></my-view3>
-          <my-view404 name="view404"></my-view404>
-        </iron-pages>
-      </app-header-layout>
-    </app-drawer-layout>
+    <iron-pages selected="[[page]]" attr-for-selected="name" fallback-selection="404" role="main">
+      <my-view1 id="view1" name="view1" party-id="[[partyId]]"></my-view1>
+      <my-queue name="queue" party-id="[[partyId]]"></my-queue>
+      <my-view3 name="view3" party-id="[[partyId]]"></my-view3>
+      <my-404 name="404"></my-404>
+    </iron-pages>
 
   </template>
 
   <script>
+
+    window.performance && performance.mark && performance.mark('app - before register');
+
     class MyApp extends Polymer.Element {
 
       static get is() { return 'my-app'; }
@@ -167,14 +215,19 @@
             observer: '_pageChanged',
           },
 
+          firebaseLoaded: {
+            type: Boolean,
+            value: false
+          },
+
           loading: {
             type: Boolean,
-            computed: '_computeLoading(_authStatusKnown, _pageLoaded)',
+            computed: '_computeLoading(_authStatusKnown, redirectHandled)',
           },
 
           partyId: {
             type: String,
-            computed: '_computePartyId(_syncedPartyId)',
+            //observer: '_partyIdChanged'
           },
 
           appInitialized: {
@@ -184,12 +237,19 @@
             }
           },
 
-          syncedPartyId: Object,
+          user: Object,
 
-          _pageLoaded: Boolean,
+          _syncedPartyId: {
+            type: Object,
+            observer: '_syncedPartyIdChanged'
+          },
+
+         /* _syncedUser: {
+            type: Object,
+            observer: '_syncedUserChanged'
+         },*/
+
           _authStatusKnown: Boolean,
-
-          rootPattern: String,
 
           subRoute: String,
           routeData: Object,
@@ -215,21 +275,80 @@
       static get observers() {
         return [
           '_authStatus(_authStatusKnown, user)',
+          '_lockScroll(loadComplete)',
+          //'_routePageChanged(routeData.page)'
         ];
       }
 
       constructor() {
         super();
 
-        Polymer.RenderStatus.afterNextRender('my-app-render', () => {
-          this.dispatchEvent(new CustomEvent('rendered'));
+        this.redirectHandled = false;
+        this.loadComplete = false;
+
+        window.performance && performance.mark && performance.mark('app.created');
+      }
+
+      _appInitialized() {
+        dblib.init(firebase.database());
+        this._handleRedirect().then(() => {
+          this.redirectHandled = true;
+          console.log('redirect done');
+          if (!firebase.auth().currentUser) {
+            this.partyId = null;
+          }
+
+          this._createPropertyObserver('partyId', '_partyIdChanged', true);
+          this._partyIdChanged(this.partyId);
         });
+      }
 
-        this.rootPattern = (new URL(this.rootPath)).pathname;
+      ready() {
+        super.ready();
+        // Custom elements polyfill safe way to indicate an element has been upgraded.
+        this.removeAttribute('unresolved');
+        // listen for custom events
+        /*this.addEventListener('add-cart-item', (e) => this._onAddCartItem(e));
+        this.addEventListener('set-cart-item', (e) => this._onSetCartItem(e));
+        this.addEventListener('clear-cart', (e) => this._onClearCart(e));
+        this.addEventListener('change-section', (e) => this._onChangeSection(e));
+        this.addEventListener('announce', (e) => this._onAnnounce(e));*/
+        this.addEventListener('dom-change', (e) => this._domChange(e));
+        this.addEventListener('show-invalid-url-warning', (e) => this._onFallbackSelectionTriggered(e));
 
-        this.appInitialized = this.appInitialized
-        .then(this._handleRedirect.bind(this))
-        .then(this._attatchObservers.bind(this));
+        Polymer.RenderStatus.afterNextRender(this, () => {
+          console.log('FIRST RENDER');
+          this.firstRender = true;
+          this._createMethodObserver('_routePageChanged(routeData.page)', true);
+          this._routePageChanged(this.routeData.page);
+          Polymer.importHref(this.resolveUrl('lazy-firebase-resources.html'), () => {
+            console.log('firebase imported');
+          }, null, true);
+
+
+          /*console.log('NEXT RNDER');
+          this._attatchObservers();
+
+          Polymer.importHref(this.resolveUrl('lazy-firebase-resources.html'), () => {
+            const config = {
+              apiKey: "AIzaSyBJxf-hJa7RQVBPYkdjt27yBcDj0b1tG8o",
+              authDomain: "spotify-party-da303.firebaseapp.com",
+              databaseURL: "https://spotify-party-da303.firebaseio.com/",
+            };
+            firebase.initializeApp(config);
+            dblib.init(firebase);
+            this._handleRedirect().then(() => {
+              this._createPropertyObserver('partyId', '_partyIdChanged', true);
+            });
+            Polymer.importHref(this.resolveUrl('lazy.html'), () => {
+              console.log('done with firebase elements');
+              this.firebaseLoaded = true;
+            }, null, true);
+          }, null, true);*/
+
+          window.addEventListener('online', (e) => this._notifyNetworkStatus(e));
+          window.addEventListener('offline', (e) => this._notifyNetworkStatus(e));
+        });
       }
 
       connectedCallback() {
@@ -237,20 +356,19 @@
       }
 
       _routePageChanged(page) {
-        if (page === undefined) {
-          return;
-        }
-
-        if (this._partyStatusRedirect(this.partyId, page)) {
-          return;
-        }
+        //if (this.redirectHandled && this._partyStatusRedirect(this.partyId, page)) {
+        //console.log(this.firstRender);
+        //if (!this.firstRender || this._partyStatusRedirect(this.partyId, page)) {
+        //  return;
+       // }
 
         this.page = page || 'view1';
 
-        this._closeDrawer();
+        this.drawerOpened = false;
       }
 
       _partyStatusRedirect(partyId, page) {
+        if (partyId === undefined) return true;
         if (partyId) {
           if (page === 'view1') {
             this.set('route.path', 'queue');
@@ -263,30 +381,73 @@
         return false;
       }
 
-      _closeDrawer() {
-        if (this.$.drawer.persistent) return;
-        this.$.drawer.close();
+      _pageChanged(page, oldPage) {
+        if (page != null) {
+          // home route is eagerly loaded
+          if (page == 'view1') {
+            this._pageLoaded(Boolean(oldPage));
+          // other routes are lazy loaded
+          } else {
+            // When a load failed, it triggered a 404 which means we need to
+            // eagerly load the 404 page definition
+            let cb = this._pageLoaded.bind(this, Boolean(oldPage));
+            Polymer.importHref(
+                this.resolveUrl(`my-${page}.html`),
+                cb, cb, true);
+          }
+        }
       }
 
-      _pageChanged(page) {
-        this._pageLoaded = false;
-
-        const resolvedPageUrl = this.resolveUrl(`my-${page}.html`);
-
-        // Note: importing offline gets nasty
-        Polymer.importHref(
-            resolvedPageUrl,
-            this._pageLoadedCallback.bind(this),
-            this._showPage404.bind(this),
-            true);
+      _pageLoaded(shouldResetLayout) {
+        console.log('page loaded', this.page);
+        this._ensureLazyLoaded();
+        if (shouldResetLayout) {
+          // The size of the header depends on the page (e.g. on some pages the tabs
+          // do not appear), so reset the header's layout only when switching pages.
+          Polymer.Async.timeOut.run(() => {
+            this.$.header.resetLayout();
+          }, 1);
+        }
+      }
+      
+      _ensureLazyLoaded() {
+        // load lazy resources after render and set `loadComplete` when done.
+        if (!this.loadComplete) {
+          //Polymer.RenderStatus.afterNextRender(this, () => {
+          //Polymer.importHref(this.resolveUrl('lazy-resources.html'), () => {
+          //  console.log('lazies');
+          //}, null, true);
+            Polymer.importHref(this.resolveUrl('lazy-resources.html'), () => {
+              // Register service worker if supported.
+              if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('service-worker.js', {scope: '/'});
+              }
+              this._notifyNetworkStatus();
+              this.loadComplete = true;
+              console.log('lazy loaded');
+            }, null, true);
+          //});
+        }
       }
 
-      _pageLoadedCallback() {
-        this._pageLoaded = true;
+      _notifyNetworkStatus() {
+        let oldOffline = this.offline;
+        this.offline = !navigator.onLine;
+        // Show the snackbar if the user is offline when starting a new session
+        // or if the network status changed.
+        /*if (this.offline || (!this.offline && oldOffline === true)) {
+          if (!this._networkSnackbar) {
+            this._networkSnackbar = document.createElement('shop-snackbar');
+            this.root.appendChild(this._networkSnackbar);
+          }
+          this._networkSnackbar.innerHTML = this.offline ?
+              'You are offline' : 'You are online';
+          this._networkSnackbar.open();
+        }*/
       }
 
-      _showPage404() {
-        this.page = 'view404';
+      _toggleDrawer() {
+        this.drawerOpened = !this.drawerOpened;
       }
 
       _login() {
@@ -308,19 +469,8 @@
       }
 
       _attatchObservers() {
-        const unsubscribe = firebase.auth().onAuthStateChanged((user) => {
-          unsubscribe();
-
-          Promise.resolve().then(() => {
-            if (user) return dblib.getUserParty(user.uid);
-          }).then(() => {
-            console.log(this.partyId);
-            this._createPropertyObserver('partyId', '_partyIdChanged', true);
-            this._createMethodObserver('_routePageChanged(routeData.page)', true);
-            this._routePageChanged(this.routeData.page);
-            this.$.fbPartyIdDoc.disabled = false;
-          });
-        });
+        this._createMethodObserver('_routePageChanged(routeData.page)', true);
+        this._routePageChanged(this.routeData.page);
       }
 
       _handleRedirect() {
@@ -328,28 +478,26 @@
           const user = result.user;
           if (!user) return;
 
-          return dblib.getUser(user.uid).then((result) => {
-            if (!result) {
-              return dblib.addUser(user);
-            }
+          dblib.getUser(user.uid).then((result) => {
+            if (!result) return dblib.addUser(user);
           }).catch((err) => {
             console.log('Error adding user', err.message);
           });
+          return;
         }).catch((err) => {
           console.log(err.message);
 
           const prevUser = firebase.auth().currentUser;
-          if (!prevUser) return;
+          if (!prevUser) return resolve(null);
           const credential = err.credential;
           let prevParty = null;
 
           return dblib.getUserParty(prevUser.uid).then((partyId) => {
             prevParty = partyId;
-            return dblib.deleteUser(prevUser, prevParty);
-          }).catch((err) => {
-            console.log('Error deleting user', err.message);
-          }).then(() => {
-            return this.$.auth.signInWithCredential(credential);
+            dblib.deleteUser(prevUser, prevParty).catch((err) => {
+              console.log('Error deleting user', err.message);
+            });
+            return firebase.auth().signInWithCredential(credential);
           }).then((user) => {
             return dblib.getUserParty((user.uid)).then((currParty) => {
               if (prevParty && prevParty !== currParty) {
@@ -362,13 +510,28 @@
         });
       }
 
-      _isSignedIn(user) {
-        return user && !user.isAnonymous;
+      _domChange(e) {
+        if (window.performance && performance.mark && !this.__loggedDomChange) {
+          let target = e.composedPath()[0];
+          let host = target.getRootNode().host;
+          if (host && host.localName.match(this.page)) {
+            this.__loggedDomChange = true;
+            performance.mark(host.localName + '.domChange');
+          }
+        }
       }
 
-      _computePartyId(syncedId) {
-        // Makes sure the zero-value for the id is null
-        return syncedId.length ? syncedId : null;
+      _onFallbackSelectionTriggered() {
+        this.page = '404';
+      }
+
+      _lockScroll(loadComplete) {
+        //document.body.style.overflow = loadComplete ? 'visible' : 'hidden';
+        //document.body.style.overflow = 'hidden';
+      }
+
+      _isSignedIn(user) {
+        return user && !user.isAnonymous;
       }
 
       _computePartyIdDocPath(uid) {
@@ -376,13 +539,29 @@
       }
 
       _partyIdChanged(partyId) {
-        //console.log(partyId);
-        //console.log(this.page);
+        //if (!this.redirectHandled) return;
         this._partyStatusRedirect(partyId, this.page);
       }
 
+      _syncedPartyIdChanged(syncedId) {
+        const syncedIdEmpty = this.isEmptyObject(syncedId);
+        if (!this.partyIdInitialized && syncedIdEmpty) {
+          this.partyIdInitialized = true;
+          return;
+        }
+        this.partyId = syncedIdEmpty ? null : syncedId;
+      }
+
+      //_syncedUserChanged(syncedUser) {
+        //if (!this.userInitialized && !syncedUser) {
+        //  this.userInitialized = true;
+        //}
+       // this.user = syncedUser;
+      //}
+
       _computeOverlayClass(loading) {
         return loading ? '' : 'hidden';
+        //return 'hidden';
       }
 
       _computeLoading(...args) {
@@ -391,7 +570,11 @@
       }
 
       _authStatus(_authStatusKnown, user) {
-        // nothing here yet ):
+        // nothing here
+      }
+
+      isEmptyObject(obj) {
+        return Object.keys(obj).length === 0 && obj.constructor === Object;
       }
 
     }

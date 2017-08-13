@@ -3,15 +3,12 @@
     "rules": "database.rules.json"
   },
   "hosting": {
-    "public": "/", /* build/default */
+    "public": "/",
+    //"public": "build/default",
     "rewrites": [
       {
         "source": "/functions/spotifyauth",
         "function": "spotifyAuth"
-      },
-      {
-        "source": "!/__/**",
-        "destination": "/index.html"
       },
       {
         "source": "**/!(*.js|*.html|*.css|*.json|*.svg|*.png|*.jpg|*.jpeg)",
