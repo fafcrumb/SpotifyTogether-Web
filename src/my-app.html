@@ -12,24 +12,17 @@
 <link rel="import" href="../bower_components/iron-media-query/iron-media-query.html">
 <link rel="import" href="../bower_components/paper-spinner/paper-spinner-lite.html">
 
-<!--<link rel="import" href="../bower_components/polymerfire/firebase-app.html">
-<link rel="import" href="../bower_components/polymerfire/firebase-auth.html">
-<link rel="import" href="../bower_components/polymerfire/firebase-document.html">
-<link rel="import" href="../bower_components/polymerfire/firebase-query.html">
-<link rel="import" href="dblib.html">-->
-
 <link rel="lazy-import" href="../bower_components/polymerfire/firebase-app.html">
 <link rel="lazy-import" href="../bower_components/polymerfire/firebase-auth.html">
 <link rel="lazy-import" href="../bower_components/polymerfire/firebase-document.html">
 <link rel="lazy-import" href="../bower_components/polymerfire/firebase-query.html">
-<link rel="lazy-import" href="dblib.html">
-<link rel="lazy-import" href="../bower_components/app-layout/app-drawer/app-drawer.html">
 <link rel="lazy-import" href="../bower_components/app-layout/app-header-layout/app-header-layout.html">
 <link rel="lazy-import" href="../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="lazy-import" href="../bower_components/paper-button/paper-button.html">
+<link rel="lazy-import" href="app-bottom-tabs.html">
+<link rel="lazy-import" href="app-bottom-tab.html">
 
 <link rel="import" href="dblib.html">
-
 <link rel="lazy-import" href="my-icons.html">
 
 <link rel="import" href="my-view1.html">
@@ -57,11 +50,13 @@
         --icon-color: #FFFFFF;
         --secondary-color: #9E9E9E;
         --primary-background-color: #303030;
-        --disabled-text-color: rgba(255, 255, 255, 0.5);
-        --disabled-icon-color: rgba(255, 255, 255, 0.5);
+        --disabled-color: rgba(255, 255, 255, 0.5);
         --error-color: #DD2C00;
 
+        --app-bottom-tabs-height: 48px;
+        --app-bottom-tab-width: 60px;
         color: var(--primary-text-color);
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
       }
 
       [hidden] {
@@ -86,51 +81,41 @@
 
       #header {
         @apply --layout-fixed-top;
+
         z-index: 2;
         background-color: var(--app-bar-color);
-        --app-header-shadow: {
-          box-shadow: inset 0px 5px 6px -3px rgba(0, 0, 0, 0.2);
-          height: 10px;
-          bottom: -10px;
-        };
-      }
-
-      paper-icon-button {
-        color: var(--icon-color);
       }
 
       #toolbar {
         position: relative;
       }
-
-      #drawer {
-        z-index: 3;
-
-        --app-drawer-content-container: {
-          background-color: var(--card-color);
-        }
-      }
-
-      #drawerList {
-        margin: 0 20px;
-      }
-
-      #drawerList a {
-        display: block;
-        padding: 0 16px;
-        text-decoration: none;
-        color: var(--secondary-text-color);
-        line-height: 40px;
-      }
-
-      #drawerList a.iron-selected {
-        color: var(--primary-text-color);
-        font-weight: bold;
-      }
     
       iron-pages {
         max-width: 1440px;
         margin: 0 auto;
+      }
+
+      app-bottom-tabs {
+        @apply --layout-fixed-bottom;
+
+        z-index: 2;
+        background-color: var(--app-bar-color);
+      }
+
+      .tab-link {
+        @apply --layout;
+        @apply --layout-center-center;
+
+        height: 100%;
+        width: 100%;
+        text-decoration: none;
+        outline: none;
+        color: var(--disabled-color);
+      }
+
+      .tab-link > div {
+        @apply --layout-vertical;
+        @apply --layout-center;
       }
 
     </style>
@@ -173,7 +158,6 @@
 
     <app-header id="header" role="navigation" condenses reveals effects="waterfall">
       <app-toolbar id="toolbar">
-        <paper-icon-button id="hamburgerIcon" icon="my-icons:menu" on-click="_toggleDrawer"></paper-icon-button>
         <div main-title>Spotify Together</div>
         <paper-button raised hidden$="[[!partyId]]" on-tap="_leaveButtonClicked">Leave</paper-button>
         <paper-button raised hidden$="[[_isSignedIn(user)]]" on-tap="_login">Sign-in</paper-button>
@@ -181,21 +165,41 @@
       </app-toolbar>
     </app-header>
 
-    <app-drawer id="drawer" opened="{{drawerOpened}}" swipe-open="[[smallScreen]]" transition-duration="400" tabindex="0">
-      <app-toolbar>Menu</app-toolbar>
-      <iron-selector id="drawerList" selected="[[page]]" attr-for-selected="name" role="navigation">
-        <a name="view1" href="view1">View One</a>
-        <a name="queue" href="queue">Queue</a>
-        <a name="view3" href="view3">View Three</a>
-      </iron-selector>
-    </app-drawer>
-
     <iron-pages selected="[[page]]" attr-for-selected="name" fallback-selection="404" role="main">
       <my-view1 id="view1" name="view1" party-id="[[partyId]]"></my-view1>
       <my-queue name="queue" party-id="[[partyId]]"></my-queue>
       <my-view3 name="view3" party-id="[[partyId]]"></my-view3>
       <my-404 name="404"></my-404>
     </iron-pages>
+    
+    <app-bottom-tabs
+        selected="[[page]]"
+        attr-for-selected="name">
+      <app-bottom-tab name="view1">
+        <a class="tab-link" href="view1">
+          <div>
+            <iron-icon icon="my-icons:menu"></iron-icon>
+            Join
+          </div>
+        </a>
+      </app-bottom-tab>
+      <app-bottom-tab name="queue">
+        <a class="tab-link" href="queue">
+          <div>
+            <iron-icon icon="my-icons:menu"></iron-icon>
+            Queue
+          </div>
+        </a>
+      </app-bottom-tab>
+      <app-bottom-tab name="view3">
+        <a class="tab-link" href="view3">
+          <div>
+            <iron-icon icon="my-icons:menu"></iron-icon>
+            Search
+          </div>
+        </a>
+      </app-bottom-tab>
+    </app-bottom-tabs>
 
   </template>
 
@@ -215,39 +219,21 @@
             observer: '_pageChanged',
           },
 
-          firebaseLoaded: {
-            type: Boolean,
-            value: false
-          },
-
           loading: {
             type: Boolean,
             computed: '_computeLoading(_authStatusKnown, redirectHandled)',
           },
 
+          user: Object,
+
           partyId: {
             type: String,
-            //observer: '_partyIdChanged'
           },
-
-          appInitialized: {
-            type: Function,
-            value: () => {
-              return Promise.resolve();
-            }
-          },
-
-          user: Object,
 
           _syncedPartyId: {
             type: Object,
             observer: '_syncedPartyIdChanged'
           },
-
-         /* _syncedUser: {
-            type: Object,
-            observer: '_syncedUserChanged'
-         },*/
 
           _authStatusKnown: Boolean,
 
@@ -363,8 +349,12 @@
        // }
 
         this.page = page || 'view1';
+/*        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
 
-        this.drawerOpened = false;
+          });
+        }); */
+
       }
 
       _partyStatusRedirect(partyId, page) {
@@ -444,10 +434,6 @@
               'You are offline' : 'You are online';
           this._networkSnackbar.open();
         }*/
-      }
-
-      _toggleDrawer() {
-        this.drawerOpened = !this.drawerOpened;
       }
 
       _login() {

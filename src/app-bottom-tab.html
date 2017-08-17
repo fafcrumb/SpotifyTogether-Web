@@ -1,0 +1,44 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../bower_components/paper-ripple/paper-ripple.html">
+
+<dom-module id="app-bottom-tab">
+  <template>
+    <style>
+      [hidden] {
+        display: none !important;
+      }
+
+      :host {
+        @apply --layout;
+        @apply --layout-center-center;
+
+        position: relative;
+        --overflow-tab-dimensions: calc(var(--app-bottom-tabs-height) + 40px);
+        height: var(--overflow-tab-dimensions);
+        width: var(--overflow-tab-dimensions);
+      }
+
+      #container {
+        height: var(--app-bottom-tabs-height);
+        width: 100%;
+      }
+    </style>
+
+    <paper-ripple class="circle" center></paper-ripple>
+    <div id="container">
+      <slot></slot>
+    </div>
+
+  </template>
+  <script>
+
+    class AppBottomTab extends Polymer.Element {
+
+      static get is() { return 'app-bottom-tab'; }
+      
+    }
+
+    customElements.define(AppBottomTab.is, AppBottomTab);
+  </script>
+</dom-module>

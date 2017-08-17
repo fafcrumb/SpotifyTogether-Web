@@ -1,6 +1,6 @@
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
 <link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
-<link rel="import" href="../bower_components/paper-material/paper-material.html">
+<link rel="import" href="../bower_components/paper-styles/element-styles/paper-material-styles.html">
 <link rel="import" href="../bower_components/paper-checkbox/paper-checkbox.html">
 
 <link rel="lazy-import" href="../bower_components/polymerfire/firebase-query.html">
@@ -11,7 +11,7 @@
 
 <dom-module id="my-queue">
   <template>
-    <style include="shared-styles">
+    <style include="shared-styles paper-material-styles">
       :host {
         display: block;
         margin-left: 20px;
@@ -53,15 +53,13 @@
         initial-count="5"
         target-framerate="60">
 
-      <paper-material elevation="1">
-        <div id="divider">
-          <paper-checkbox
-              checked="[[_computeChecked(track.votes)]]"
-              on-change="_trackChecked"></paper-checkbox>
-          [[_computeVoteCount(track.votes)]]
-          [[track.artist]] • [[track.album]]
-        </div>
-      </paper-material>
+      <div id="divider" class="paper-material" elevation="1">
+<!--        <paper-checkbox
+            checked="[[_computeChecked(track.votes)]]"
+            on-change="_trackChecked"></paper-checkbox>-->
+        [[_computeVoteCount(track.votes)]]
+        [[track.artist]] • [[track.album]]
+      </div>
 
     </template>
 

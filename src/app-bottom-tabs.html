@@ -1,0 +1,48 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../bower_components/iron-selector/iron-selectable.html">
+
+<dom-module id="app-bottom-tabs">
+  <template strip-whitespace>
+    <style>
+      :host {
+        display: block;
+      }
+
+      #container {
+        @apply --layout-horizontal;
+        @apply --layout-center;
+        @apply --layout-around-justified;
+
+        height: var(--app-bottom-tabs-height, 48px);
+        overflow: hidden;
+      }
+    </style>
+
+    <div id="container">
+      <slot></slot>
+    </div>
+
+  </template>
+  <script>
+
+    class AppBottomTabs extends Polymer.mixinBehaviors(
+      [Polymer.IronSelectableBehavior], Polymer.Element) {
+
+      static get is() { return 'app-bottom-tabs'; }
+
+      static get observers() {
+        return [
+          '_onSelectedItemChanged(selectedItem)'
+        ]      
+      }
+
+      _onSelectedItemChanged(selectedItem) {
+        if (selectedItem === undefined && this.selected) return;
+        //this.$.overlay.target = selectedItem;
+      }
+    }
+
+    customElements.define(AppBottomTabs.is, AppBottomTabs);
+  </script>
+</dom-module>
