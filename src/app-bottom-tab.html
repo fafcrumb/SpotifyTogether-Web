@@ -1,6 +1,5 @@
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
 <link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
-<link rel="import" href="../bower_components/paper-ripple/paper-ripple.html">
 
 <dom-module id="app-bottom-tab">
   <template>
@@ -14,18 +13,16 @@
         @apply --layout-center-center;
 
         position: relative;
-        --overflow-tab-dimensions: calc(var(--app-bottom-tabs-height) + 40px);
-        height: var(--overflow-tab-dimensions);
-        width: var(--overflow-tab-dimensions);
+        height: 100%;
+        width: var(--app-bottom-tab-width, 60px);
       }
 
       #container {
-        height: var(--app-bottom-tabs-height);
+        height: 100%;
         width: 100%;
       }
     </style>
 
-    <paper-ripple class="circle" center></paper-ripple>
     <div id="container">
       <slot></slot>
     </div>

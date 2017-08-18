@@ -102,6 +102,10 @@
         background-color: var(--app-bar-color);
       }
 
+      app-bottom-tab.iron-selected > a {
+        color: var(--primary-text-color);
+      }
+
       .tab-link {
         @apply --layout;
         @apply --layout-center-center;
@@ -111,6 +115,15 @@
         text-decoration: none;
         outline: none;
         color: var(--disabled-color);
+
+        transform: scale3d(1, 1, 1);
+        transition: transform 0.1s;
+      }
+
+      .tab-link:active {
+        color: rgba(255, 255, 255, 0.1);
+        transform: scale3d(0.95, 0.95, 1);
+        transition: transform 0.1s;
       }
 
       .tab-link > div {
@@ -349,11 +362,6 @@
        // }
 
         this.page = page || 'view1';
-/*        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-
-          });
-        }); */
 
       }
 

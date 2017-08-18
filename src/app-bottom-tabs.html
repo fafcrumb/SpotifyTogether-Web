@@ -31,16 +31,6 @@
 
       static get is() { return 'app-bottom-tabs'; }
 
-      static get observers() {
-        return [
-          '_onSelectedItemChanged(selectedItem)'
-        ]      
-      }
-
-      _onSelectedItemChanged(selectedItem) {
-        if (selectedItem === undefined && this.selected) return;
-        //this.$.overlay.target = selectedItem;
-      }
     }
 
     customElements.define(AppBottomTabs.is, AppBottomTabs);
