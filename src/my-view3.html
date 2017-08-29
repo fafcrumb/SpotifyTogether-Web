@@ -209,7 +209,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           artist: model.track.artists[0].name,
           album: model.track.album.name,
           id: model.track.id,
-          vote_count: 0,
           added_at: firebase.database.ServerValue.TIMESTAMP,
           user_id: this.user.uid,
         }).catch((err) => {

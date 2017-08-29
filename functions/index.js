@@ -7,7 +7,7 @@ admin.initializeApp(functions.config().firebase);
 const SPOTIFY_TOKEN_URL = 'https://accounts.spotify.com/api/token';
 //const SPOTIFY_TRACKS_URL = 'https://api.spotify.com/v1/tracks';
 const SPOTIFY_ID_SECRET = 'MjJjZDVkM2EwMzA0NGZiYzlkOWQwZWM5YjIzZmE2NmI6ZmU1Mzg5MmU3YTgwNDQ3Yjk0M2YwYWE2NmMxOWRkYzA=';
-
+/*
 exports.countVoteChange = functions.database.ref('/tracks/{partyid}/{trackid}/votes/{voteid}').onWrite(event => { 
   const collectionRef = event.data.adminRef.parent;
   const countRef = collectionRef.parent.child('vote_count');
@@ -31,7 +31,7 @@ exports.countVoteChange = functions.database.ref('/tracks/{partyid}/{trackid}/vo
     console.log('Error updating counter', err.message);
   });
 });
-
+*/
 exports.spotifyAuth = functions.https.onRequest((request, response) => {
   getSpotifyAccessToken().then((token) => {
     response.status(200).send(token);

@@ -1,6 +1,125 @@
 {
+  // Spotify Together security rules
   "rules": {
-    ".read": true,
-    ".write": true
+    // By default, make all data private unless specified otherwise.
+    ".read": false,
+    ".write": false,
+    "party-metadata": {
+      ".read": true,
+      "$partyId": {
+        // Append-only by anyone, and admins can add official rooms, and edit or remove rooms as well.
+        ".write": "(auth != null) && (!data.exists() || root.child('moderators').hasChild(auth.uid) || data.child('createdByUserId').val() === auth.uid)",
+        ".validate": "newData.hasChildren(['name','type','host','key'])",
+        "id": {
+          ".validate": "(newData.val() === $partyId)"
+        },
+        "host": {
+          ".validate": "(auth.uid === newData.val())"
+        },
+        /*"numUsers": {
+          ".validate": "(newData.isNumber())"
+        },*/
+        "type": {
+          ".validate": "('anonymous-friendly' === newData.val()) || 'sign-in-only' === newData.val()"
+        },
+        "key": {
+          ".validate": "(newData.val().matches(/^[A-Z]{4}$/))"
+        },
+        // A list of users that may read messages from this room.
+        "authorizedUsers": {
+          ".write": "(auth != null) && (!data.exists() || root.child('moderators').hasChild(auth.uid) || data.hasChild(auth.uid))"
+        }
+        /* "$other": {
+          ".validate": false
+        }*/
+      }
+    },
+    "party-tracks": {
+      "$partyId": {
+        // A list of tracks by party, viewable by anyone in the party.
+        ".read": "(root.child('party-members').child($partyId).hasChild(auth.uid))",
+        "$trackId": {
+          // Allow anyone in the party to append to this list.
+          ".write": "(auth != null) && (!data.exists()) && (newData.exists()) && (root.child('party-members').child($partyId).hasChild(auth.uid))",
+          ".validate": "(newData.hasChildren(['userId','spotifyURI','timestamp']))",
+          "userId": {
+            ".validate": "newData.val() === auth.uid"
+          },
+          "timestamp": {
+            ".validate": "newData.val() === now"
+          },
+          "votes": {
+            // A list of votes on this track, which any member of the party can add or remove themselves to/from, except the user who added this track.
+            ".validate": "data.parent().child('userId').val() !== auth.uid",
+            "$userId": {
+              ".write": "(auth != null) && ($userId === auth.uid)",
+              ".validate": "(newData.val() === true)"
+            }
+          }
+          /* "$other": {
+            ".validate": false
+          }*/
+        }
+      }
+    },
+    "party-members": {
+      "$partyId": {
+        // Anyone in the party can read the list of members
+        ".read": "(root.child('party-members').child($partyId).hasChild(auth.uid))",
+        "$userId": {
+          // A list of users by party, which any user can add or remove themselves to/from. Hosts can add or remove anyone in their party.
+          ".write": "(auth != null) && ($userId === auth.uid || root.child('party-metadata').child($partyId).child('host').val() === auth.uid) && (newData.exists() || !newData.parent().parent().parent().child('users').child($userId).hasChild('party'))",
+          ".validate": "(newData.parent().parent().parent().child('users').child($userId).child('party').val() === $userId)"
+          /*"$sessionId": {
+            ".validate": "(!newData.exists() || newData.hasChildren(['id','name']))"
+          }*/
+        }
+      }
+    },
+    "party-keys": {
+      ".read": true,
+      "$key": {
+        // One to one mapping of 4 letter keys to party id's, only hosts can add or remove their own parties from this mapping.
+        ".write": "(auth != null) && (root.child('party-metadata').child(newData.val()).child('host').val() === auth.uid)",
+        ".validate": "($key === root.child('party-metadata').child(newData.val()).child('key').val())"
+      }
+    },
+    "users": {
+      // A list of users and their associated metadata, which can be updated by the single user.
+      "$userId": {
+        ".write": "(auth != null) && (auth.uid === $userId)",
+        ".read": "(auth != null) && (auth.uid === $userId)",
+        "party": {
+          ".write": "(newData.exists() || !newData.parent().parent().parent().child('party-members').child(newData.val()).hasChild($userId))",
+          ".validate": "(newData.val() === newData.parent().parent().parent().child('party-members').child(newData.val()).hasChild($userId))"
+        }
+        /*"isAnonymous": {
+          ".validate": "newData.val() === auth.isAnonymous"
+        }*/
+        /*"invites": {
+          // A list of chat invitations from other users, append-only by anyone.
+          "$inviteId": {
+            // Allow the user who created the invitation to read the status of the invitation.
+            ".read": "(auth != null) && (auth.uid === data.child('fromUserId').val())",
+            ".write": "(auth != null) && (!data.exists() || $userId === auth.uid || data.child('fromUserId').val() === auth.uid)",
+            ".validate": "newData.hasChildren(['fromUserId','fromUserName','roomId']) && (newData.child('id').val() === $inviteId)"
+          }
+        },*/
+        /*"notifications": {
+          // A list of notifications, which can only be appended to by moderators.
+          "$notificationId": {
+            ".write": "(auth != null) && (data.val() === null) && (root.child('moderators').hasChild(auth.uid))",
+            ".validate": "newData.hasChildren(['fromUserId','timestamp','notificationType'])",
+            "fromUserId": {
+              ".validate": "newData.val() === auth.uid"
+            }
+          }
+        }*/
+      }
+    },
+    "spotify-api-metadata": {
+      ".read": true,
+      ".write": false
+    }
   }
 }

@@ -57,6 +57,15 @@
         --app-bottom-tab-width: 60px;
         color: var(--primary-text-color);
         -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+
+        --no-select: {
+          -webkit-touch-callout: none;
+          -webkit-user-select: none;
+          -khtml-user-select: none;
+          -moz-user-select: none;
+          -ms-user-select: none;
+          user-select: none;
+        };
       }
 
       [hidden] {
@@ -84,6 +93,12 @@
 
         z-index: 2;
         background-color: var(--app-bar-color);
+
+        --app-header-shadow: {
+          box-shadow: inset 0px 5px 6px -3px rgba(0, 0, 0, 0.2);
+          height: 10px;
+          bottom: -10px;
+        };
       }
 
       #toolbar {
@@ -94,41 +109,12 @@
         max-width: 1440px;
         margin: 0 auto;
       }
-
+  
       app-bottom-tabs {
         @apply --layout-fixed-bottom;
 
         z-index: 2;
         background-color: var(--app-bar-color);
-      }
-
-      app-bottom-tab.iron-selected > a {
-        color: var(--primary-text-color);
-      }
-
-      .tab-link {
-        @apply --layout;
-        @apply --layout-center-center;
-
-        height: 100%;
-        width: 100%;
-        text-decoration: none;
-        outline: none;
-        color: var(--disabled-color);
-
-        transform: scale3d(1, 1, 1);
-        transition: transform 0.1s;
-      }
-
-      .tab-link:active {
-        color: rgba(255, 255, 255, 0.1);
-        transform: scale3d(0.95, 0.95, 1);
-        transition: transform 0.1s;
-      }
-
-      .tab-link > div {
-        @apply --layout-vertical;
-        @apply --layout-center;
       }
 
     </style>
@@ -185,33 +171,10 @@
       <my-404 name="404"></my-404>
     </iron-pages>
     
-    <app-bottom-tabs
-        selected="[[page]]"
-        attr-for-selected="name">
-      <app-bottom-tab name="view1">
-        <a class="tab-link" href="view1">
-          <div>
-            <iron-icon icon="my-icons:menu"></iron-icon>
-            Join
-          </div>
-        </a>
-      </app-bottom-tab>
-      <app-bottom-tab name="queue">
-        <a class="tab-link" href="queue">
-          <div>
-            <iron-icon icon="my-icons:menu"></iron-icon>
-            Queue
-          </div>
-        </a>
-      </app-bottom-tab>
-      <app-bottom-tab name="view3">
-        <a class="tab-link" href="view3">
-          <div>
-            <iron-icon icon="my-icons:menu"></iron-icon>
-            Search
-          </div>
-        </a>
-      </app-bottom-tab>
+    <app-bottom-tabs selected="[[page]]" attr-for-selected="name">
+      <app-bottom-tab name="view1" href="view1" icon="my-icons:menu" label="Join"></app-bottom-tab>
+      <app-bottom-tab name="queue" href="queue" icon="my-icons:menu" label="Queue"></app-bottom-tab>
+      <app-bottom-tab name="view3" href="view3" icon="my-icons:menu" label="Search"></app-bottom-tab>
     </app-bottom-tabs>
 
   </template>
@@ -292,7 +255,6 @@
         dblib.init(firebase.database());
         this._handleRedirect().then(() => {
           this.redirectHandled = true;
-          console.log('redirect done');
           if (!firebase.auth().currentUser) {
             this.partyId = null;
           }
@@ -316,13 +278,10 @@
         this.addEventListener('show-invalid-url-warning', (e) => this._onFallbackSelectionTriggered(e));
 
         Polymer.RenderStatus.afterNextRender(this, () => {
-          console.log('FIRST RENDER');
           this.firstRender = true;
           this._createMethodObserver('_routePageChanged(routeData.page)', true);
           this._routePageChanged(this.routeData.page);
-          Polymer.importHref(this.resolveUrl('lazy-firebase-resources.html'), () => {
-            console.log('firebase imported');
-          }, null, true);
+          Polymer.importHref(this.resolveUrl('lazy-firebase-resources.html'), null, null, true);
 
 
           /*console.log('NEXT RNDER');
@@ -362,7 +321,6 @@
        // }
 
         this.page = page || 'view1';
-
       }
 
       _partyStatusRedirect(partyId, page) {
@@ -380,6 +338,7 @@
       }
 
       _pageChanged(page, oldPage) {
+        console.log('PAGE CHANGED', page, oldPage);
         if (page != null) {
           // home route is eagerly loaded
           if (page == 'view1') {
@@ -397,7 +356,6 @@
       }
 
       _pageLoaded(shouldResetLayout) {
-        console.log('page loaded', this.page);
         this._ensureLazyLoaded();
         if (shouldResetLayout) {
           // The size of the header depends on the page (e.g. on some pages the tabs
@@ -422,7 +380,6 @@
               }
               this._notifyNetworkStatus();
               this.loadComplete = true;
-              console.log('lazy loaded');
             }, null, true);
           //});
         }

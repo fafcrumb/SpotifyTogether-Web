@@ -6,7 +6,20 @@
   <template strip-whitespace>
     <style>
       :host {
-        display: block;
+        display: block;   
+      }
+
+      :host::before {
+        position: absolute;
+        right: 0px;
+        top: -10px;
+        left: 0px;
+        width: 100%;
+        height: 10px;
+        content: "";
+        pointer-events: none;
+        opacity: 1;
+        box-shadow: inset 0px -5px 6px -3px rgba(0, 0, 0, 0.2);
       }
 
       #container {
@@ -14,8 +27,9 @@
         @apply --layout-center;
         @apply --layout-around-justified;
 
-        height: var(--app-bottom-tabs-height, 48px);
-        overflow: hidden;
+        @apply --no-select;
+
+        height: var(--app-bottom-tabs-height, 56px);
       }
     </style>
 
@@ -31,6 +45,15 @@
 
       static get is() { return 'app-bottom-tabs'; }
 
+      ready() {
+        super.ready();
+        this.addEventListener('iron-activate', (e) => this._handleTabSelection(e));        
+      }
+
+      _handleTabSelection(e) {
+        e.preventDefault();
+        e.detail.item.clickLink();
+      }
     }
 
     customElements.define(AppBottomTabs.is, AppBottomTabs);

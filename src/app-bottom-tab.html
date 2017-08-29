@@ -1,38 +1,95 @@
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/iron-icon/iron-icon.html">
 <link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
 
 <dom-module id="app-bottom-tab">
-  <template>
+  <template strip-whitespace>
     <style>
       [hidden] {
         display: none !important;
       }
 
       :host {
-        @apply --layout;
-        @apply --layout-center-center;
-
+        display: block;
         position: relative;
         height: 100%;
         width: var(--app-bottom-tab-width, 60px);
+        transform: scale3d(1, 1, 1);
+        transition: transform 0.1s;
+        will-change: transform;
       }
 
-      #container {
+      :host(.touch-active) {
+        transform: scale3d(0.95, 0.95, 1);
+        transition: transform 0.1s;
+      }
+
+      :host(.iron-selected) #link {
+        color: var(--primary-text-color);
+      }
+
+      :host(.touch-active) #link {
+        color: rgba(255, 255, 255, 0.1);  
+      }
+
+      #link {
+        @apply --layout;
+        @apply --layout-center-center;
+
         height: 100%;
         width: 100%;
+        text-decoration: none;
+        outline: none;
+        color: var(--disabled-color);
+
+        pointer-events: none;
+      }
+
+      #tab-container {
+        @apply --layout-vertical;
+        @apply --layout-center;
       }
     </style>
 
-    <div id="container">
-      <slot></slot>
-    </div>
+    <a id="link" href$="[[href]]">
+      <div id="tab-container">
+        <iron-icon icon="[[icon]]"></iron-icon>
+        [[label]]
+      </div>
+    </a>
 
   </template>
   <script>
 
-    class AppBottomTab extends Polymer.Element {
+    class AppBottomTab extends Polymer.GestureEventListeners(Polymer.Element) {
 
       static get is() { return 'app-bottom-tab'; }
+
+      static get properties() {
+        return {
+          label: String,
+          href: String,
+          icon: String,
+        }
+      }
+
+      ready() {
+        super.ready();
+        Polymer.Gestures.addListener(this, 'down', this._handleDown);
+        Polymer.Gestures.addListener(this, 'up', this._handleUp);
+      }
+
+      clickLink() {
+        this.$.link.click();
+      }
+
+      _handleDown() {
+        this.classList.add('touch-active');
+      }
+
+      _handleUp() {
+        this.classList.remove('touch-active');
+      }
       
     }
 
