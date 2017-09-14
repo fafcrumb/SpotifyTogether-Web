@@ -113,6 +113,10 @@
         background-color: var(--app-bar-color);
       }
 
+      app-bottom-tabs[unresolved] > app-bottom-tab {
+        display: none;
+      }
+
       app-bottom-tab > a {
         @apply --layout;
         @apply --layout-center-center;
@@ -175,7 +179,7 @@
       <my-404 name="404"></my-404>
     </iron-pages>
     
-    <app-bottom-tabs selected="[[page]]" attr-for-selected="name">
+    <app-bottom-tabs unresolved selected="[[page]]" attr-for-selected="name">
       <app-bottom-tab name="join">
         <a class="tab-link" href="join">
           <div class="tab-container">

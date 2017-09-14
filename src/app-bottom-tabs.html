@@ -47,6 +47,7 @@
 
       ready() {
         super.ready();
+        this.removeAttribute('unresolved');
         this.addEventListener('iron-activate', (e) => this._handleTabSelection(e));        
       }
 

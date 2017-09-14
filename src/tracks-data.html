@@ -28,14 +28,16 @@
     ready() {
       super.ready();
 
-      SpotifyTogether.on('party-enter', this.__onPartyEnter.bind(this));
-    }
-
-    __onPartyEnter() {
+      SpotifyTogether.on('party-leave', this.__onPartyLeave.bind(this));
       SpotifyTogether.on('track-add', this.__onTrackAdd.bind(this));
       SpotifyTogether.on('track-remove', this.__onTrackRemove.bind(this));
       SpotifyTogether.on('track-change', this.__onTrackChange.bind(this));
       SpotifyTogether.on('track-move', this.__onTrackMove.bind(this));
+    }
+
+    __onPartyLeave() {
+      this.queue = [];
+      this.trackIdMap = {};
     }
 
     __onTrackAdd(track, prevChildKey) {

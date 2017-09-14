@@ -173,8 +173,7 @@
             resolve(this._spotifyTogetherRef.update(updates));
           }
 
-          this._onEnterParty({ id: partyId });
-
+          this._onEnterParty(partyId);
           this._trackRef.child(this._party).orderByChild('timestamp').on('child_added', (snapshot, prevChildKey) => {
             this._onNewTrack(snapshot, prevChildKey);
           });
