@@ -58,7 +58,7 @@ const getSpotifyAccessToken = () => {
 
   return new Promise((resolve, reject) => {
     rp(options).then((res) => {
-      return admin.database().ref('/spotify/client_credentials').set(res).then(() => {
+      return admin.database().ref('/spotify-api-metadata/clientCredentials').set(res).then(() => {
         resolve(res.access_token);
       });
     }).catch((err) => {

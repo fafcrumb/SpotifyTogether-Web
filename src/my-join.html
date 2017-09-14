@@ -1,0 +1,85 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+
+<link rel="lazy-import" href="../bower_components/iron-meta/iron-meta.html">
+
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="my-join">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+        padding: 10px;
+      }
+
+      #codeInput {
+        --paper-input-container-input: {
+          text-transform: uppercase;
+        }
+      }
+    </style>
+
+    <paper-input
+        id="codeInput"
+        maxlength="[[_partyCodeFormat.length]]"
+        pattern="[[_partyCodeFormat.allowedInput]]"
+        error-message="[[_errorMessage]]"
+        on-value-changed="_codeInputChanged"></paper-input>
+
+  </template>
+
+  <script>
+    class MyJoin extends Polymer.Element {
+
+      static get is() { return 'my-join'; }
+
+      static get properties() {
+        return {
+          partyId: String,
+          _partyCodeFormat: Object,
+          _errorMessage: String,
+
+          // Meta
+          _partyCodeFormat: {
+            type: Object,
+            value: {
+              allowedInput: '^[a-zA-Z]+$',
+              exactFormat: new RegExp('^[A-Z]{4}$'),
+              length: 4,
+            },
+          },
+        };
+      }
+
+      _codeInputChanged(_, e) {
+        const codeInput = this.$.codeInput;
+        const code = e.value;
+        codeInput.validate();
+        if (codeInput.invalid) {
+          this._errorMessage = 'Invalid party code format.' +
+                               ' Party codes are 4 letters ex. \"ABCD\"';
+          return;
+        }
+        if (code.length !== codeInput.maxlength) {
+          return;
+        }
+
+        SpotifyTogether.findPartyWithCode(code.toUpperCase()).then((partyId) => {
+          if (!partyId) {
+            this._errorMessage = 'Party not found'
+            codeInput.invalid = true;
+            return;
+          } else {
+            return SpotifyTogether.enterParty(partyId);
+          }
+        }).catch((err) => {
+          console.log('Error joining party', err.message);
+          this._errorMessage = 'Error joining party ):';
+          codeInput.invalid = true;
+        });
+      }
+    }
+
+    window.customElements.define(MyJoin.is, MyJoin);
+  </script>
+</dom-module>

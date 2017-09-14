@@ -47,12 +47,13 @@
         min-height: 100vh;
         background: #303030;
         color: #FFFFFF;
+        -webkit-font-smoothing: antialiased;
       }
 
       my-app[unresolved] {
         display: block;
         width: 100%;
-        min-height: 101vh;
+        min-height: 100vh;
         background: #303030;
         color: #FFFFFF;
       }
@@ -60,10 +61,12 @@
   </head>
   <body>
 
-    <my-app unresolved>Spotify Together</my-app>
+    <my-app unresolved></my-app>
 
-    <script src="/bower_components/webcomponentsjs/webcomponents-loader.js"></script>
-    <link rel="import" href="/src/my-app.html">
+    <!-- Note: async tags here might be redundant with http2push, but it's allowing the index
+               to render faster. So...? Needs testing in prod -->
+    <script src="/bower_components/webcomponentsjs/webcomponents-loader.js" async></script>
+    <link rel="import" href="/src/my-app.html" async>
 
     <noscript>
       <style>

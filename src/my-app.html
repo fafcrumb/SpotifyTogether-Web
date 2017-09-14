@@ -11,24 +11,19 @@
 <link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
 <link rel="import" href="../bower_components/iron-media-query/iron-media-query.html">
 <link rel="import" href="../bower_components/paper-spinner/paper-spinner-lite.html">
-
-<link rel="lazy-import" href="../bower_components/polymerfire/firebase-app.html">
-<link rel="lazy-import" href="../bower_components/polymerfire/firebase-auth.html">
-<link rel="lazy-import" href="../bower_components/polymerfire/firebase-document.html">
-<link rel="lazy-import" href="../bower_components/polymerfire/firebase-query.html">
-<link rel="lazy-import" href="../bower_components/app-layout/app-header-layout/app-header-layout.html">
 <link rel="lazy-import" href="../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="lazy-import" href="../bower_components/paper-button/paper-button.html">
+
+<link rel="import" href="firebase-scripts.html">
+<link rel="import" href="spotify-together-script.html">
+<link rel="import" href="tracks-data.html">
+<link rel="import" href="my-join.html">
+<link rel="lazy-import" href="my-queue.html">
+<link rel="lazy-import" href="my-search.html">
+<link rel="lazy-import" href="my-404.html">
 <link rel="lazy-import" href="app-bottom-tabs.html">
 <link rel="lazy-import" href="app-bottom-tab.html">
-
-<link rel="import" href="dblib.html">
 <link rel="lazy-import" href="my-icons.html">
-
-<link rel="import" href="my-view1.html">
-<link rel="lazy-import" href="my-queue.html">
-<link rel="lazy-import" href="my-view3.html">
-<link rel="lazy-import" href="my-404.html">
 
 <dom-module id="my-app">
   <template>
@@ -41,7 +36,7 @@
         min-height: 100vh;
 
         --primary-color: #1DB954; /* Spotify green */
-        --accent-color: #1DB954;
+        --accent-color: #1DB954; /* Spotify green */
         --app-bar-color: #212121;
         --card-color: #424242;
         --divider-color: rgba(255, 255, 255, 0.12);
@@ -117,25 +112,33 @@
         background-color: var(--app-bar-color);
       }
 
+      app-bottom-tab > a {
+        @apply --layout;
+        @apply --layout-center-center;
+
+        height: 100%;
+        width: 100%;
+        text-decoration: none;
+        outline: none;
+        color: var(--disabled-color);
+
+        /*pointer-events: none;*/
+      }
+
+      app-bottom-tab.iron-selected > a {
+        color: var(--primary-text-color);
+      }
+
+      app-bottom-tab.touch-active > a {
+        color: rgba(255, 255, 255, 0.1);  
+      }
+
+      .tab-container {
+        @apply --layout-vertical;
+        @apply --layout-center;
+      }
+
     </style>
-
-    <firebase-app
-        api-key="AIzaSyBJxf-hJa7RQVBPYkdjt27yBcDj0b1tG8o"
-        auth-domain="spotify-party-da303.firebaseapp.com"
-        database-url="https://spotify-party-da303.firebaseio.com/"
-        on-firebase-app-initialized="_appInitialized"></firebase-app>
-
-    <firebase-auth
-        id="auth"
-        provider="google"
-        user="{{user}}"
-        status-known="{{_authStatusKnown}}"></firebase-auth>
-
-    <firebase-document
-        id="fbPartyIdDoc"
-        path="/users/[[user.uid]]/party"
-        path="[[_computePartyIdDocPath(user.uid)]]"
-        data="{{_syncedPartyId}}"></firebase-document>
 
     <app-location route="{{route}}"></app-location>
 
@@ -146,7 +149,6 @@
         tail="{{subRoute}}"></app-route>
 
     <iron-meta key="phoneMaxWidth" value="[[phoneMaxWidth]]"></iron-meta>
-    <iron-meta key="partyCodeFormat" value="[[partyCodeFormat]]"></iron-meta>
 
     <iron-media-query query="[[phoneMaxWidth]]" query-matches="{{smallScreen}}"></iron-media-query>
 
@@ -159,22 +161,44 @@
       <app-toolbar id="toolbar">
         <div main-title>Spotify Together</div>
         <paper-button raised hidden$="[[!partyId]]" on-tap="_leaveButtonClicked">Leave</paper-button>
-        <paper-button raised hidden$="[[_isSignedIn(user)]]" on-tap="_login">Sign-in</paper-button>
-        <paper-button raised hidden$="[[!_isSignedIn(user)]]" on-tap="_logout">Logout</paper-button>
+        <paper-button raised hidden$="[[signedIn]]" on-tap="_login">Sign-in</paper-button>
+        <paper-button raised hidden$="[[!signedIn]]" on-tap="_logout">Logout</paper-button>
       </app-toolbar>
     </app-header>
 
+    <tracks-data queue="{{tracks}}" track-id-map="{{trackMap}}"></tracks-data>
     <iron-pages selected="[[page]]" attr-for-selected="name" fallback-selection="404" role="main">
-      <my-view1 id="view1" name="view1" party-id="[[partyId]]"></my-view1>
-      <my-queue name="queue" party-id="[[partyId]]"></my-queue>
-      <my-view3 name="view3" party-id="[[partyId]]"></my-view3>
+      <my-join id="join" name="join" party-id="[[partyId]]"></my-join>
+      <my-queue name="queue" tracks="[[tracks]]" party-id="[[partyId]]"></my-queue>
+      <my-search name="search" track-map="[[trackMap]]" party-id="[[partyId]]"></my-search>
       <my-404 name="404"></my-404>
     </iron-pages>
     
     <app-bottom-tabs selected="[[page]]" attr-for-selected="name">
-      <app-bottom-tab name="view1" href="view1" icon="my-icons:menu" label="Join"></app-bottom-tab>
-      <app-bottom-tab name="queue" href="queue" icon="my-icons:menu" label="Queue"></app-bottom-tab>
-      <app-bottom-tab name="view3" href="view3" icon="my-icons:menu" label="Search"></app-bottom-tab>
+      <app-bottom-tab name="join">
+        <a class="tab-link" href="join">
+          <div class="tab-container">
+            <iron-icon icon="my-icons:menu"></iron-icon>
+            Join
+          </div>
+        </a>
+      </app-bottom-tab>
+      <app-bottom-tab name="queue">
+        <a class="tab-link" href="queue">
+          <div class="tab-container">
+            <iron-icon icon="my-icons:menu"></iron-icon>
+            Queue
+          </div>
+        </a>
+      </app-bottom-tab>
+      <app-bottom-tab name="search">
+        <a class="tab-link" href="search">
+          <div class="tab-container">
+            <iron-icon icon="my-icons:menu"></iron-icon>
+            Search
+          </div>
+        </a>
+      </app-bottom-tab>
     </app-bottom-tabs>
 
   </template>
@@ -200,35 +224,28 @@
             computed: '_computeLoading(_authStatusKnown, redirectHandled)',
           },
 
-          user: Object,
+          partyId: String,
 
-          partyId: {
-            type: String,
-          },
-
-          _syncedPartyId: {
-            type: Object,
-            observer: '_syncedPartyIdChanged'
+          signedIn: {
+            type: Boolean,
+            value: false
           },
 
           _authStatusKnown: Boolean,
 
           subRoute: String,
+
           routeData: Object,
 
           // meta
+          pages: {
+            type: Array,
+            value: ['join', 'queue', 'search']
+          },
+
           phoneMaxWidth: {
             type: String,
             value: 'max-width: 640px',
-          },
-
-          partyCodeFormat: {
-            type: Object,
-            value: {
-              allowedInput: '^[a-zA-Z]+$',
-              exactFormat: new RegExp('^[A-Z]{4}$'),
-              length: 4,
-            },
           },
 
         };
@@ -236,32 +253,26 @@
 
       static get observers() {
         return [
-          '_authStatus(_authStatusKnown, user)',
           '_lockScroll(loadComplete)',
-          //'_routePageChanged(routeData.page)'
+          '_routePageChanged(routeData.page)'
         ];
       }
 
       constructor() {
         super();
 
-        this.redirectHandled = false;
-        this.loadComplete = false;
-
         window.performance && performance.mark && performance.mark('app.created');
-      }
 
-      _appInitialized() {
-        dblib.init(firebase.database());
-        this._handleRedirect().then(() => {
-          this.redirectHandled = true;
-          if (!firebase.auth().currentUser) {
-            this.partyId = null;
-          }
+        this.redirectHandled = false;
 
-          this._createPropertyObserver('partyId', '_partyIdChanged', true);
-          this._partyIdChanged(this.partyId);
-        });
+        var config = {
+          apiKey: "AIzaSyBJxf-hJa7RQVBPYkdjt27yBcDj0b1tG8o",
+          authDomain: "spotify-party-da303.firebaseapp.com",
+          databaseURL: "https://spotify-party-da303.firebaseio.com/"
+        };
+        firebase.initializeApp(config);
+        SpotifyTogether = new SpotifyTogether(firebase.database().ref());
+        this._handleRedirect();
       }
 
       ready() {
@@ -269,41 +280,16 @@
         // Custom elements polyfill safe way to indicate an element has been upgraded.
         this.removeAttribute('unresolved');
         // listen for custom events
-        /*this.addEventListener('add-cart-item', (e) => this._onAddCartItem(e));
-        this.addEventListener('set-cart-item', (e) => this._onSetCartItem(e));
-        this.addEventListener('clear-cart', (e) => this._onClearCart(e));
-        this.addEventListener('change-section', (e) => this._onChangeSection(e));
-        this.addEventListener('announce', (e) => this._onAnnounce(e));*/
+        this.addEventListener('announce', (e) => this._onAnnounce(e));
         this.addEventListener('dom-change', (e) => this._domChange(e));
         this.addEventListener('show-invalid-url-warning', (e) => this._onFallbackSelectionTriggered(e));
 
+        //firebase.auth().onAuthStateChanged(this.__onAuthStateChanged.bind(this));
+        SpotifyTogether.on('user-update', this.__onUserUpdate.bind(this));
+        SpotifyTogether.on('party-enter', this.__onEnterParty.bind(this));
+        SpotifyTogether.on('party-leave', this.__onLeaveParty.bind(this));
+
         Polymer.RenderStatus.afterNextRender(this, () => {
-          this.firstRender = true;
-          this._createMethodObserver('_routePageChanged(routeData.page)', true);
-          this._routePageChanged(this.routeData.page);
-          Polymer.importHref(this.resolveUrl('lazy-firebase-resources.html'), null, null, true);
-
-
-          /*console.log('NEXT RNDER');
-          this._attatchObservers();
-
-          Polymer.importHref(this.resolveUrl('lazy-firebase-resources.html'), () => {
-            const config = {
-              apiKey: "AIzaSyBJxf-hJa7RQVBPYkdjt27yBcDj0b1tG8o",
-              authDomain: "spotify-party-da303.firebaseapp.com",
-              databaseURL: "https://spotify-party-da303.firebaseio.com/",
-            };
-            firebase.initializeApp(config);
-            dblib.init(firebase);
-            this._handleRedirect().then(() => {
-              this._createPropertyObserver('partyId', '_partyIdChanged', true);
-            });
-            Polymer.importHref(this.resolveUrl('lazy.html'), () => {
-              console.log('done with firebase elements');
-              this.firebaseLoaded = true;
-            }, null, true);
-          }, null, true);*/
-
           window.addEventListener('online', (e) => this._notifyNetworkStatus(e));
           window.addEventListener('offline', (e) => this._notifyNetworkStatus(e));
         });
@@ -313,35 +299,59 @@
         super.connectedCallback();
       }
 
-      _routePageChanged(page) {
-        //if (this.redirectHandled && this._partyStatusRedirect(this.partyId, page)) {
-        //console.log(this.firstRender);
-        //if (!this.firstRender || this._partyStatusRedirect(this.partyId, page)) {
-        //  return;
-       // }
+      __onAuthStateChanged(user) {
+        if (!user) {
+          firebase.auth().signInAnonymously();
+        } else {
+          SpotifyTogether.setUser(user.uid, user.displayName, user.isAnonymous).then((user) => {
+            return SpotifyTogether.getUserParty();
+          }).then((partyId) => {
+            if (!!partyId) {
+              SpotifyTogether.enterParty(partyId);
+            } else {
+              this._partyStatusRedirect(null, this.page);
+            }
+          });
+        }
+      }
 
-        this.page = page || 'view1';
+      __onUserUpdate(user) {
+        this.user = user;
+        this.signedIn = (!!user && !user.isAnonymous);
+      }
+
+      __onEnterParty(partyId) {
+        this._partyStatusRedirect(partyId, this.page);
+        this.partyId = partyId;
+      }
+
+      __onLeaveParty(partyId) {
+        this._partyStatusRedirect(null, this.page);
+        this.partyId = null;
+      }
+
+      _routePageChanged(page) {
+        this.page = page || 'join';
       }
 
       _partyStatusRedirect(partyId, page) {
         if (partyId === undefined) return true;
         if (partyId) {
-          if (page === 'view1') {
+          if (page === 'join') {
             this.set('route.path', 'queue');
             return true;
           }
-        } else if (page !== 'view1') {
-          this.set('route.path', 'view1');
+        } else if (this.pages.includes(page) && page !== 'join') {
+          this.set('route.path', 'join');
           return true;
         }
         return false;
       }
 
       _pageChanged(page, oldPage) {
-        console.log('PAGE CHANGED', page, oldPage);
         if (page != null) {
           // home route is eagerly loaded
-          if (page == 'view1') {
+          if (page == 'join') {
             this._pageLoaded(Boolean(oldPage));
           // other routes are lazy loaded
           } else {
@@ -369,10 +379,7 @@
       _ensureLazyLoaded() {
         // load lazy resources after render and set `loadComplete` when done.
         if (!this.loadComplete) {
-          //Polymer.RenderStatus.afterNextRender(this, () => {
-          //Polymer.importHref(this.resolveUrl('lazy-resources.html'), () => {
-          //  console.log('lazies');
-          //}, null, true);
+          Polymer.RenderStatus.afterNextRender(this, () => {
             Polymer.importHref(this.resolveUrl('lazy-resources.html'), () => {
               // Register service worker if supported.
               if ('serviceWorker' in navigator) {
@@ -381,7 +388,7 @@
               this._notifyNetworkStatus();
               this.loadComplete = true;
             }, null, true);
-          //});
+          });
         }
       }
 
@@ -402,62 +409,76 @@
       }
 
       _login() {
-        if (this.user && this.user.isAnonymous) {
-          const provider = new firebase.auth.GoogleAuthProvider();
+        const provider = new firebase.auth.GoogleAuthProvider();
+        const currentUser = firebase.auth().currentUser;
+        if (currentUser && currentUser.isAnonymous) {
           firebase.auth().currentUser.linkWithRedirect(provider);
         } else {
-          this.$.auth.signInWithRedirect();
+          firebase.auth().signInWithRedirect(provider);
         }
       }
 
       _logout() {
         // should use button's on transition end
-        this.$.auth.signOut();
+        firebase.auth().signOut().then(() => {
+          location.reload();
+        });
       }
 
       _leaveButtonClicked(e) {
-        dblib.leaveParty(this.partyId, this.user.uid);
-      }
-
-      _attatchObservers() {
-        this._createMethodObserver('_routePageChanged(routeData.page)', true);
-        this._routePageChanged(this.routeData.page);
+        SpotifyTogether.leaveParty();
       }
 
       _handleRedirect() {
         return firebase.auth().getRedirectResult().then((result) => {
-          const user = result.user;
-          if (!user) return;
-
-          dblib.getUser(user.uid).then((result) => {
-            if (!result) return dblib.addUser(user);
-          }).catch((err) => {
-            console.log('Error adding user', err.message);
-          });
-          return;
+          if (!!result.credential) {
+            console.log('Successful link');
+          } else {
+            console.log('This is not a redirect');
+          }
         }).catch((err) => {
           console.log(err.message);
 
           const prevUser = firebase.auth().currentUser;
-          if (!prevUser) return resolve(null);
+          if (!prevUser) {
+            console.log('No anon user. This should not happen');
+            return;
+          }
+
           const credential = err.credential;
           let prevParty = null;
 
-          return dblib.getUserParty(prevUser.uid).then((partyId) => {
-            prevParty = partyId;
-            dblib.deleteUser(prevUser, prevParty).catch((err) => {
+          return firebase.database().ref('users').child(prevUser.uid).child('party').once('value').then((snapshot) => {
+            prevParty = snapshot.val();
+            const updates = {};
+            if (!!prevParty) {
+              updates[`party-members/${prevParty}/${prevUser.uid}`] = null;
+            }
+            updates[`users/${prevUser.uid}`] = null;
+            firebase.database().ref().update(updates);
+            prevUser.delete().catch((err) => {
               console.log('Error deleting user', err.message);
             });
             return firebase.auth().signInWithCredential(credential);
           }).then((user) => {
-            return dblib.getUserParty((user.uid)).then((currParty) => {
+            return firebase.database().ref('users').child(user.uid).child('party').once('value').then((snapshot) => {
+              const currParty = snapshot.val();
               if (prevParty && prevParty !== currParty) {
-                return dblib.switchToParty(user.uid, prevParty, currParty);
+                const updates = {};
+                updates[`users/${user.uid}/party`] = prevParty;
+                updates[`party-members/${prevParty}/${user.uid}`] = true;
+                if (!currParty) {
+                  updates[`party-members/${currParty}/${user.uid}`] = null;
+                }
+                return firebase.database().ref().update(updates);
               }
             });
           }).catch((err) => {
             console.log('Error switching parties', err.message);
           });
+        }).then(() => {
+          this.redirectHandled = true;
+          firebase.auth().onAuthStateChanged(this.__onAuthStateChanged.bind(this));
         });
       }
 
@@ -481,51 +502,14 @@
         //document.body.style.overflow = 'hidden';
       }
 
-      _isSignedIn(user) {
-        return user && !user.isAnonymous;
-      }
-
-      _computePartyIdDocPath(uid) {
-        return dblib.userPartyPath(uid);
-      }
-
-      _partyIdChanged(partyId) {
-        //if (!this.redirectHandled) return;
-        this._partyStatusRedirect(partyId, this.page);
-      }
-
-      _syncedPartyIdChanged(syncedId) {
-        const syncedIdEmpty = this.isEmptyObject(syncedId);
-        if (!this.partyIdInitialized && syncedIdEmpty) {
-          this.partyIdInitialized = true;
-          return;
-        }
-        this.partyId = syncedIdEmpty ? null : syncedId;
-      }
-
-      //_syncedUserChanged(syncedUser) {
-        //if (!this.userInitialized && !syncedUser) {
-        //  this.userInitialized = true;
-        //}
-       // this.user = syncedUser;
-      //}
-
       _computeOverlayClass(loading) {
         return loading ? '' : 'hidden';
-        //return 'hidden';
       }
 
       _computeLoading(...args) {
         // Returns true if at least one argument is false
-        return args.some((el) => !el);
-      }
-
-      _authStatus(_authStatusKnown, user) {
-        // nothing here
-      }
-
-      isEmptyObject(obj) {
-        return Object.keys(obj).length === 0 && obj.constructor === Object;
+        //return args.some((el) => !el);
+        return false;
       }
 
     }

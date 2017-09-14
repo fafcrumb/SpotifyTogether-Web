@@ -26,6 +26,15 @@ module.exports = {
           name: 'webcomponentsjs-polyfills-cache'
         }
       }
+    },
+    {
+      urlPattern: /https:\/\/www.gstatic.com\/firebasejs\/*\/firebase-*.js/,
+      handler: 'fastest',
+      options: {
+        cache: {
+          name: 'firebase-scripts-cache'
+        }
+      }
     }
   ]
 };

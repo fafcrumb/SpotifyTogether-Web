@@ -2,9 +2,9 @@
   "entrypoint": "index.html",
   "shell": "src/my-app.html",
   "fragments": [
-    "src/my-view1.html",
+    "src/my-join.html",
     "src/my-queue.html",
-    "src/my-view3.html",
+    "src/my-search.html",
     "src/my-404.html"
   ],
   "sources": [
@@ -19,9 +19,6 @@
   "builds": [{
     "name": "default",
     "preset": "es6-unbundled",
-    "js": {
-      "minify": false
-    },
     "swPrecacheConfig": "sw-precache-config.js"
   }],
   "lint": {

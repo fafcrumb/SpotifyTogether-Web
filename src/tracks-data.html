@@ -1,0 +1,90 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+
+<script>
+  class TracksData extends Polymer.Element {
+
+    static get is() { return 'tracks-data'; }
+
+    static get properties() {
+      return {
+        queue: {
+          type: Array,
+          notify: true
+        },
+        trackIdMap: {
+          type: Object,
+          notify: true
+        }
+      };
+    }
+
+    constructor() {
+      super();
+
+      this.queue = [];
+      this.trackIdMap = {};
+    }
+
+    ready() {
+      super.ready();
+
+      SpotifyTogether.on('party-enter', this.__onPartyEnter.bind(this));
+    }
+
+    __onPartyEnter() {
+      SpotifyTogether.on('track-add', this.__onTrackAdd.bind(this));
+      SpotifyTogether.on('track-remove', this.__onTrackRemove.bind(this));
+      SpotifyTogether.on('track-change', this.__onTrackChange.bind(this));
+      SpotifyTogether.on('track-move', this.__onTrackMove.bind(this));
+    }
+
+    __onTrackAdd(track, prevChildKey) {
+      const prevChildIndex = this.__indexFromKey(prevChildKey);
+      this.set(['trackIdMap', track.id], track);
+      this.splice('queue', prevChildIndex + 1, 0, track);
+    }
+
+    __onTrackRemove(trackId) {
+      const track = this.trackIdMap[trackId];
+      if (track) {
+        this.set(['trackIdMap', trackId], null);
+        const trackIndex = this.__indexFromKey(trackId);
+        this.splice('queue', trackIndex, 1);
+      }
+    }
+
+    __onTrackChange(newTrack) {
+      const oldTrack = this.trackIdMap[newTrack.id];
+      if (oldTrack) {
+        //this.set(['trackIdMap', newTrack.id], newTrack);
+        const trackIndex = this.__indexFromKey(newTrack.id);
+        this.set(['queue', trackIndex, 'votes'], newTrack.votes || null);
+      }
+    }
+
+    __onTrackMove(trackId, prevChildKey) {
+      const track = this.trackIdMap[trackId];
+      if (track) {
+        const currentIndex = this.__indexFromKey(trackId)
+        const prevChildIndex = this.__indexFromKey(prevChildKey);
+        this.splice('queue', currentIndex, 1);
+        this.splice('queue', prevChildIndex + 1, 0, track);
+      }
+    }
+
+    // Linear search to find matching id in data.
+    __indexFromKey(key) {
+      if (!!key) {
+        for (var i = 0; i < this.queue.length; i++) {
+          if (this.queue[i].id === key) {
+            return i;
+          }
+        }
+      }
+      return -1;
+    }
+
+  }
+
+  window.customElements.define(TracksData.is, TracksData);
+</script>

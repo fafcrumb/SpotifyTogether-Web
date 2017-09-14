@@ -1,66 +1,39 @@
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
 <link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
-<link rel="import" href="../bower_components/paper-styles/element-styles/paper-material-styles.html">
 <link rel="import" href="../bower_components/paper-checkbox/paper-checkbox.html">
-
-<link rel="lazy-import" href="../bower_components/polymerfire/firebase-query.html">
-<link rel="lazy-import" href="../bower_components/polymerfire/firebase-document.html">
-<link rel="lazy-import" href="../bower_components/polymerfire/firebase-auth.html">
 
 <link rel="import" href="shared-styles.html">
 
 <dom-module id="my-queue">
   <template>
-    <style include="shared-styles paper-material-styles">
+    <style include="shared-styles">
       :host {
         display: block;
         margin-left: 20px;
       }
 
-      #divider {
+      .trackContainer {
         margin-bottom: 30px;
       }
     </style>
 
-    <firebase-auth id="auth" user="{{user}}"></firebase-auth>
-
-    <firebase-document
-        id="fbSpotifyTokenDoc"
-        path="/spotify/client_credentials"
-        data="{{_spotifyCredentials}}"></firebase-document>
-
-    <firebase-query
-        id="fbTracksQuery"
-        order-by-child="added_at"
-        path="/tracks/[[partyId]]"
-        data="{{_tracks}}"></firebase-query>
-
-    <iron-ajax
-        id="tracksApi"
-        url$="https://api.spotify.com/v1/tracks/[[testId]]"
-        headers$='{"Authorization": "Bearer [[_spotifyCredentials.access_token]]"}'
-        handle-as="json"
-        last-response="{{_response}}"
-        reject-with-request
-        debounce-duration="300"></iron-ajax>
-
     <template
         is="dom-repeat"
         id="queueRepeat"
-        items="[[_tracks]]"
+        items="[[tracks]]"
         as="track"
-        index-as="index"
+        itemsIndexAs="trackIndex"
         initial-count="5"
         target-framerate="60">
 
-      <div id="divider" class="paper-material" elevation="1">
+      <index id$="[[track.id]]"></index>
+      <div class="trackContainer">
         <paper-checkbox
             checked="[[_computeChecked(track.votes)]]"
             on-change="_trackChecked"></paper-checkbox>
         [[_computeVoteCount(track.votes)]]
-        [[track.artist]] • [[track.album]]
+        [[track.name]] • [[track.artist]] • [[track.album]]
       </div>
-
     </template>
 
   </template>
@@ -72,43 +45,22 @@
 
       static get properties() {
         return {
-          partyId: {
-            type: String,
-          },
-
-          _testArray: {
-            type: Array,
-            value: () => {return []},
-          },
+          tracks: Array
         };
       }
 
       _computeChecked(votes) {
-        return votes && votes[this.user.uid];
+        return votes && votes[SpotifyTogether._userId];
       }
 
       _computeVoteCount(votes) {
         return votes ? Object.keys(votes).length : 0;
       }
   
-      _trackChecked(e) {
-        //if (!user || user.isAnonymous) {
-        //  return;
-        //}
-        
-        const model = this.$.queueRepeat.modelForElement(e.target);
-        const ref = firebase.database().ref(`/tracks/${this.partyId}/${model.track.$key}/votes`);
-
-        this._toggleVote(ref, this.user.uid);
-      }
-
-      _toggleVote(trackRef, uid) {
-        return trackRef.child(uid).once('value').then((snapshot) => {
-          const vote = snapshot.val() ? null : true;
-          return trackRef.child(uid).set(vote);
-        }).catch((err) => {
-          console.log('Error voting', err.message);
-        });
+      _trackChecked(event) {
+        const addVote = event.srcElement.checked;
+        const track = this.$.queueRepeat.itemForElement(event.target);
+        SpotifyTogether.voteTrack(track.id, addVote);
       }
 
     }

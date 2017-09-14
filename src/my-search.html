@@ -15,13 +15,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/paper-item/paper-icon-item.html">
 <link rel="import" href="../bower_components/paper-item/paper-item-body.html">
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
-
-<link rel="lazy-import" href="../bower_components/polymerfire/firebase-document.html">
-<link rel="lazy-import" href="../bower_components/polymerfire/firebase-auth.html">
-
 <link rel="import" href="shared-styles.html">
 
-<dom-module id="my-view3">
+<dom-module id="my-search">
   <template>
     <style include="shared-styles">
       :host {
@@ -50,14 +46,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       paper-icon-button, iron-icon {
         margin-right: 50px;
       }
-
     </style>
-
-    <firebase-auth id="auth" user="{{user}}"></firebase-auth>
 
     <firebase-document
         id="fbSpotifyTokenDoc"
-        path="/spotify/client_credentials"
+        path="/spotify-api-metadata/clientCredentials"
         data="{{_spotifyCredentials}}"></firebase-document>
 
     <iron-ajax
@@ -91,32 +84,37 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           initial-count="5"
           target-framerate="60">
 
-        <paper-material elevation="1">
-          <paper-icon-item>
+        <index class="idIndex" track-id$="[[track.id]]"></index>
+        <paper-icon-item>
             <!--<iron-image 
               src="[[track.album.images.0.url]]" 
               style="width:100px; height:100px; background-color: lightgray;"
               sizing="cover"
               preload fade></iron-image>-->
-            <paper-item-body two-line>
-              <div>[[track.name]]</div>
-              <div secondary>[[track.artists.0.name]]</div>
-            </paper-item-body>
-            <paper-icon-button icon="my-icons:add" on-tap="_addSong" hidden$="[[!user]]"></paper-icon-button>
-          </paper-icon-item>
-        </paper-material>
-
+          <paper-item-body two-line>
+            <div>[[track.name]]</div>
+            <div secondary>[[track.artists.0.name]]</div>
+          </paper-item-body>
+          <paper-icon-button 
+              icon="my-icons:add"
+              on-tap="_addButtonClicked"
+              hidden$="[[_computeTrackAdded(track.id, track.added)]]"></paper-icon-button>
+          <iron-icon
+              icon="my-icons:check"
+              hidden$="[[!_computeTrackAdded(track.id, track.added)]]"></iron-icon>
+        </paper-icon-item>
       </template>
     </div>
 
   </template>
 
   <script>
-    class MyView3 extends Polymer.Element {
-      static get is() { return 'my-view3'; }
+    class MySearch extends Polymer.Element {
+      static get is() { return 'my-search'; }
 
       static get properties() {
         return {
+          trackMap: Object,
           partyId: String,
           _spotifyCredentials: Object,
           _spotifyToken: String,
@@ -127,7 +125,36 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       static get observers() {
         return [
           '_spotifyCredentialsChanged(_spotifyCredentials.access_token)',
-        ];
+          '_trackMapChanged(trackMap.*)'
+        ]
+      }
+
+      _trackMapChanged(trackMapSplices) {
+        const trackRepeat = this.$.trackRepeat;
+        const track = trackMapSplices.value;
+        const trackId = trackMapSplices.path.split('.')[1];
+        if (!trackRepeat.items || !trackRepeat.items.length || !trackId) return;
+        Polymer.Async.microTask.run(() => {
+          try {
+            const trackElement = this.shadowRoot.querySelector(`.idIndex[track-id="${trackId}"]`);
+            const model = trackRepeat.modelForElement(trackElement);
+            model.set('track.added', !!track ? true : false);
+          } catch(err) {
+            console.log('Error setting track added', err.message);
+          }
+        });
+      }
+
+      _addButtonClicked(event) {
+        const track = this.$.trackRepeat.itemForElement(event.target);
+        if (!track) return;
+        Polymer.Async.timeOut.after(200).run(() => { // Wait for ripple to finish
+          SpotifyTogether.addTrack(track.id, track.name, track.artists[0].name, track.album.name);
+        });
+      }
+
+      _computeTrackAdded(trackId) {
+        return !!this.trackMap[trackId];
       }
 
       _spotifyCredentialsChanged(token) {
@@ -135,7 +162,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
 
       _computeQuery(query) {
-        // Check if last 2 characters of query are alphanumueric
+        // Check if last 2 characters of query are alphanumueric,
+        // and if so, add wildcard to query. Wildcard can produce errors
+        // without this precaution.
         if (query.length > 1 && /^[a-zA-Z0-9]{2}$/.test(query.slice(-2))) {
           return query += '*';
         }
@@ -151,11 +180,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                                                      this._search.bind(this));
       }
 
-      // Expired token BQCWGr8wlGAX_TDAw3u7UxnUovVdN8-s-o24fi3XABfcxWOxbFugv9ZjfmlJYZ8GPfTShMLJ71uMjpVCERaB_w
+      // Expired token for testing BQCWGr8wlGAX_TDAw3u7UxnUovVdN8-s-o24fi3XABfcxWOxbFugv9ZjfmlJYZ8GPfTShMLJ71uMjpVCERaB_w
 
       _search() {
-        if (this.$.authTokenFunction.loading)
+        if (this.$.authTokenFunction.loading) {
           return;
+        }
 
         this._launchSearch(this._searchQuery, this._spotifyToken).catch((err) => {
           if (err.message === 'No token provided' || 
@@ -197,25 +227,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
       }
 
-      _addSong(e) {
-        if (!this.user) {
-          console.log('Not signed in');
-          return;
-        }
-        const model = this.$.trackRepeat.modelForElement(e.target);
-        const ref = firebase.database().ref(`tracks/${this.partyId}`);
-        ref.push({
-          name: model.track.name,
-          artist: model.track.artists[0].name,
-          album: model.track.album.name,
-          id: model.track.id,
-          added_at: firebase.database.ServerValue.TIMESTAMP,
-          user_id: this.user.uid,
-        }).catch((err) => {
-          console.log('Error adding track to queue', err.message);
-        })
-      }
-
       _fadeInOut() {
         this.$.searchResults.classList.add('hidden');
         Polymer.Async.timeOut.after(1).run(() => {
@@ -224,6 +235,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
     }
 
-    window.customElements.define(MyView3.is, MyView3);
+    window.customElements.define(MySearch.is, MySearch);
   </script>
 </dom-module>
