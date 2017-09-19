@@ -9,7 +9,10 @@
       "$partyId": {
         // Append-only by anyone, but the host can edit their own party
         ".write": "(auth != null) && (!data.exists() || data.child('host').val() === auth.uid)",
-        ".validate": "newData.hasChildren(['type','host','code'])",
+        ".validate": "newData.hasChildren(['name','type','host','code'])",
+        "name": {
+          ".validate": "(newData.isString()) && (newData.val().length <= 20)"
+        },
         "id": {
           ".validate": "(newData.val() === $partyId)"
         },

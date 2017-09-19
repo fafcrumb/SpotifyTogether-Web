@@ -3,9 +3,11 @@
   "shell": "src/my-app.html",
   "fragments": [
     "src/my-join.html",
+    "src/my-party.html",
     "src/my-queue.html",
     "src/my-search.html",
-    "src/my-404.html"
+    "src/my-404.html",
+    "src/lazy-resources.html"
   ],
   "sources": [
     "src/**/*",

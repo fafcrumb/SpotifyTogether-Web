@@ -20,6 +20,7 @@
 <link rel="import" href="tracks-data.html">
 <link rel="import" href="my-join.html">
 <link rel="lazy-import" href="my-queue.html">
+<link rel="lazy-import" href="my-party.html">
 <link rel="lazy-import" href="my-search.html">
 <link rel="lazy-import" href="my-404.html">
 <link rel="lazy-import" href="app-bottom-tabs.html">
@@ -29,12 +30,14 @@
 <dom-module id="my-app">
   <template>
     <style>
+      [hidden] {
+        display: none !important;
+      }
+
       :host {
         display: block;
         position: relative;
-        padding-top: 64px;
-        padding-bottom: 64px;
-        min-height: 100vh;
+        height: 100%;
 
         --primary-color: #1DB954; /* Spotify green */
         --accent-color: #1DB954; /* Spotify green */
@@ -49,6 +52,8 @@
         --disabled-color: rgba(255, 255, 255, 0.5);
         --error-color: #DD2C00;
 
+        --paper-spinner-color: var(--primary-color);
+        --app-bar-height: 48px;
         --app-bottom-tabs-height: 48px;
         --app-bottom-tab-width: 60px;
         color: var(--primary-text-color);
@@ -64,24 +69,29 @@
         };
       }
 
-      [hidden] {
-        display: none !important;
-      }
-
       #loadingOverlay {
         @apply --layout;
         @apply --layout-center-center;
 
         position: absolute;
-        top: 20px;
+        top: 0;
         height: 100vh;
         width: 100%;
         z-index: 1;
+        visibility: visible;
+        opacity: 1;
+        transition: visibility 0.2s, opacity 0.2s;
         background: var(--primary-background-color);
       }
 
       #loadingOverlay.hidden {
-        display: none;
+        visibility: hidden;
+        opacity: 0;
+      }
+
+      #loadingSpinner {
+        position: relative;
+        bottom: 40px;
       }
 
       #header {
@@ -99,50 +109,68 @@
 
       #toolbar {
         position: relative;
+        height: 48px;
+      }
+
+      paper-button {
+        height: 30px;
       }
     
-      iron-pages {
+      #appPages {
         max-width: 1440px;
         margin: 0 auto;
+        padding-top: var(--app-bar-height);
+      }
+
+      .app-page {
+        opacity: 0;
+        transition: opacity 1s;
+      }
+
+      .app-page.iron-selected {
+        opacity: 1;
+        transition: opacity 1s;
       }
   
-      app-bottom-tabs {
+      #appTabs {
         @apply --layout-fixed-bottom;
 
         z-index: 2;
         background-color: var(--app-bar-color);
       }
 
-      app-bottom-tabs[unresolved] > app-bottom-tab {
+      #appTabs[selected="join"] {
         display: none;
       }
 
-      app-bottom-tab > a {
-        @apply --layout;
-        @apply --layout-center-center;
-
-        height: 100%;
-        width: 100%;
-        text-decoration: none;
-        outline: none;
-        color: var(--disabled-color);
-
-        /*pointer-events: none;*/
+      .app-tab[unresolved] {
+        display: none;
       }
 
-      app-bottom-tab.iron-selected > a {
+      /* Only needed for Safari */
+      .app-tab.iron-selected > a {
         color: var(--primary-text-color);
       }
-
-      app-bottom-tab.touch-active > a {
-        color: rgba(255, 255, 255, 0.1);  
+      .app-tab.touch-active > a {
+        color: rgba(255, 255, 255, 0.1);
       }
 
-      .tab-container {
-        @apply --layout-vertical;
-        @apply --layout-center;
+      .tab-icon {
+        width: 24px;
+        height: 24px;
       }
 
+      /* Reasonable guess for height when onscreen
+         keyboards are visible */
+      @media (max-height: 500px) {
+        #appTabs {
+          display: none;
+        }
+
+        #loadingOverlay {
+          visibility: hidden;
+        }
+      }
     </style>
 
     <app-location route="{{route}}"></app-location>
@@ -165,43 +193,37 @@
     <app-header id="header" role="navigation" condenses reveals effects="waterfall">
       <app-toolbar id="toolbar">
         <div main-title>Spotify Together</div>
-        <paper-button raised hidden$="[[!partyId]]" on-tap="_leaveButtonClicked">Leave</paper-button>
         <paper-button raised hidden$="[[signedIn]]" on-tap="_login">Sign-in</paper-button>
         <paper-button raised hidden$="[[!signedIn]]" on-tap="_logout">Logout</paper-button>
       </app-toolbar>
     </app-header>
 
     <tracks-data queue="{{tracks}}" track-id-map="{{trackMap}}"></tracks-data>
-    <iron-pages selected="[[page]]" attr-for-selected="name" fallback-selection="404" role="main">
-      <my-join id="join" name="join" party-id="[[partyId]]"></my-join>
-      <my-queue name="queue" tracks="[[tracks]]" party-id="[[partyId]]"></my-queue>
-      <my-search name="search" track-map="[[trackMap]]" party-id="[[partyId]]"></my-search>
-      <my-404 name="404"></my-404>
+    <iron-pages id="appPages" selected="[[page]]" attr-for-selected="name" fallback-selection="404" role="main">
+      <my-join class="app-page" name="join"></my-join>
+      <my-party class="app-page" name="party"></my-party>
+      <my-queue class="app-page" name="queue" tracks="[[tracks]]"></my-queue>
+      <my-search class="app-page" name="search" track-map="[[trackMap]]"></my-search>
+      <my-404 class="app-page" name="404"></my-404>
     </iron-pages>
     
-    <app-bottom-tabs unresolved selected="[[page]]" attr-for-selected="name">
-      <app-bottom-tab name="join">
-        <a class="tab-link" href="join">
-          <div class="tab-container">
-            <iron-icon icon="my-icons:menu"></iron-icon>
-            Join
-          </div>
+    <app-bottom-tabs unresolved class="unresolved" id="appTabs" selected="[[page]]" attr-for-selected="name">
+      <app-bottom-tab unresolved class="app-tab" name="party">
+        <a href="party">
+          <iron-icon class="tab-icon" icon="my-icons:cake"></iron-icon>
+          Party
         </a>
       </app-bottom-tab>
-      <app-bottom-tab name="queue">
-        <a class="tab-link" href="queue">
-          <div class="tab-container">
-            <iron-icon icon="my-icons:menu"></iron-icon>
-            Queue
-          </div>
+      <app-bottom-tab unresolved class="app-tab" name="queue">
+        <a href="queue">          
+          <iron-icon class="tab-icon" icon="my-icons:queue-music"></iron-icon>
+          Queue
         </a>
       </app-bottom-tab>
-      <app-bottom-tab name="search">
-        <a class="tab-link" href="search">
-          <div class="tab-container">
-            <iron-icon icon="my-icons:menu"></iron-icon>
-            Search
-          </div>
+      <app-bottom-tab unresolved class="app-tab" name="search">
+        <a href="search">
+          <iron-icon class="tab-icon" icon="my-icons:search"></iron-icon>
+          Search
         </a>
       </app-bottom-tab>
     </app-bottom-tabs>
@@ -226,7 +248,12 @@
 
           loading: {
             type: Boolean,
-            computed: '_computeLoading(_authStatusKnown, redirectHandled)',
+            value: true
+          },
+
+          _loadStatus: {
+            type: Number,
+            value: 1
           },
 
           partyId: String,
@@ -245,7 +272,7 @@
           // meta
           pages: {
             type: Array,
-            value: ['join', 'queue', 'search']
+            value: ['join', 'party', 'queue', 'search']
           },
 
           phoneMaxWidth: {
@@ -268,7 +295,8 @@
 
         window.performance && performance.mark && performance.mark('app.created');
 
-        this.redirectHandled = false;
+        this.addEventListener('load-status', (e) => this._onLoadStatus(e));
+        this.loadedPages = {};
 
         var config = {
           apiKey: "AIzaSyBJxf-hJa7RQVBPYkdjt27yBcDj0b1tG8o",
@@ -280,6 +308,10 @@
         this._handleRedirect();
       }
 
+      connectedCallback() {
+        super.connectedCallback();
+      }
+
       ready() {
         super.ready();
         // Custom elements polyfill safe way to indicate an element has been upgraded.
@@ -289,7 +321,6 @@
         this.addEventListener('dom-change', (e) => this._domChange(e));
         this.addEventListener('show-invalid-url-warning', (e) => this._onFallbackSelectionTriggered(e));
 
-        //firebase.auth().onAuthStateChanged(this.__onAuthStateChanged.bind(this));
         SpotifyTogether.on('user-update', this.__onUserUpdate.bind(this));
         SpotifyTogether.on('party-enter', this.__onEnterParty.bind(this));
         SpotifyTogether.on('party-leave', this.__onLeaveParty.bind(this));
@@ -300,10 +331,6 @@
         });
       }
 
-      connectedCallback() {
-        super.connectedCallback();
-      }
-
       __onAuthStateChanged(user) {
         if (!user) {
           firebase.auth().signInAnonymously();
@@ -312,10 +339,12 @@
             return SpotifyTogether.getUserParty();
           }).then((partyId) => {
             if (!!partyId) {
-              SpotifyTogether.enterParty(partyId);
+              return SpotifyTogether.enterParty(partyId);
             } else {
               this._partyStatusRedirect(null, this.page);
             }
+          }).then(() => {
+            this.dispatchEvent(new CustomEvent('load-status', {detail: 'load-end'}));
           });
         }
       }
@@ -336,12 +365,16 @@
       }
 
       _routePageChanged(page) {
+        if (page === 'index.html') {
+          this.set('route.path', '/');
+          return;
+        }
         this.page = page || 'join';
       }
 
       _partyStatusRedirect(partyId, page) {
         if (partyId === undefined) return true;
-        if (partyId) {
+        if (!!partyId) {
           if (page === 'join') {
             this.set('route.path', 'queue');
             return true;
@@ -360,9 +393,12 @@
             this._pageLoaded(Boolean(oldPage));
           // other routes are lazy loaded
           } else {
+            if (!this.loadedPages[page]) {
+              this.dispatchEvent(new CustomEvent('load-status', { detail: 'load-start' }));
+            }
             // When a load failed, it triggered a 404 which means we need to
             // eagerly load the 404 page definition
-            let cb = this._pageLoaded.bind(this, Boolean(oldPage));
+            let cb = this._pageLoaded.bind(this, page, Boolean(oldPage));
             Polymer.importHref(
                 this.resolveUrl(`my-${page}.html`),
                 cb, cb, true);
@@ -370,11 +406,10 @@
         }
       }
 
-      _pageLoaded(shouldResetLayout) {
+      _pageLoaded(page, shouldResetLayout) {
+        this.loadedPages[page] = true;
         this._ensureLazyLoaded();
         if (shouldResetLayout) {
-          // The size of the header depends on the page (e.g. on some pages the tabs
-          // do not appear), so reset the header's layout only when switching pages.
           Polymer.Async.timeOut.run(() => {
             this.$.header.resetLayout();
           }, 1);
@@ -415,8 +450,7 @@
 
       _login() {
         const provider = new firebase.auth.GoogleAuthProvider();
-        const currentUser = firebase.auth().currentUser;
-        if (currentUser && currentUser.isAnonymous) {
+        if (this.user && this.user.isAnonymous) {
           firebase.auth().currentUser.linkWithRedirect(provider);
         } else {
           firebase.auth().signInWithRedirect(provider);
@@ -428,10 +462,6 @@
         firebase.auth().signOut().then(() => {
           location.reload();
         });
-      }
-
-      _leaveButtonClicked(e) {
-        SpotifyTogether.leaveParty();
       }
 
       _handleRedirect() {
@@ -482,7 +512,7 @@
             console.log('Error switching parties', err.message);
           });
         }).then(() => {
-          this.redirectHandled = true;
+          // Bind listener
           firebase.auth().onAuthStateChanged(this.__onAuthStateChanged.bind(this));
         });
       }
@@ -500,6 +530,11 @@
 
       _onFallbackSelectionTriggered() {
         this.page = '404';
+      }
+
+      _onLoadStatus(event) {
+        event.detail === 'load-start' ? this._loadStatus++ : this._loadStatus--;
+        this.loading = (this._loadStatus > 0);
       }
 
       _lockScroll(loadComplete) {

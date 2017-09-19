@@ -3,10 +3,14 @@
 <link rel="import" href="../bower_components/iron-selector/iron-selectable.html">
 
 <dom-module id="app-bottom-tabs">
-  <template strip-whitespace>
+  <template>
     <style>
       :host {
-        display: block;   
+        @apply --no-select;
+        display: block;
+        height: var(--app-bottom-tabs-height);
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+        -webkit-tap-highlight-color: transparent;
       }
 
       :host::before {
@@ -22,18 +26,16 @@
         box-shadow: inset 0px -5px 6px -3px rgba(0, 0, 0, 0.2);
       }
 
-      #container {
+      #tab-container {
         @apply --layout-horizontal;
         @apply --layout-center;
         @apply --layout-around-justified;
-
-        @apply --no-select;
-
-        height: var(--app-bottom-tabs-height, 56px);
+        height: 100%;
+        margin-top: 3px;
       }
     </style>
 
-    <div id="container">
+    <div id="tab-container">
       <slot></slot>
     </div>
 
@@ -45,15 +47,23 @@
 
       static get is() { return 'app-bottom-tabs'; }
 
+      static get properties() {
+        return {
+          selected: {
+            type: String,
+            reflectToAttribute: true
+          }
+        }
+      }
+
       ready() {
         super.ready();
-        this.removeAttribute('unresolved');
         this.addEventListener('iron-activate', (e) => this._handleTabSelection(e));        
       }
 
       _handleTabSelection(e) {
         e.preventDefault();
-        //e.detail.item.clickLink();
+        e.detail.item.clickLink();
       }
     }
 

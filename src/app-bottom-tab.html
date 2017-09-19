@@ -13,14 +13,43 @@
         position: relative;
         height: 100%;
         width: var(--app-bottom-tab-width, 60px);
-        transform: scale3d(1, 1, 1);
+        cursor: pointer;
+        transform: scale3d(1, 1, 1) translate3d(1, 1, 1);
         transition: transform 0.1s;
         will-change: transform;
       }
 
       :host(.touch-active) {
+        transform: scale3d(0.95, 0.95, 1) translate3d(0, 1px, 0);
+      }
+
+      :host(.iron-selected) {
+        transform: scale3d(1.05, 1.05, 1) translate3d(0, -1px, 0);
+      }
+
+      :host(.touch-active.iron-selected) {
         transform: scale3d(0.95, 0.95, 1);
-        transition: transform 0.1s;
+      }
+
+      :host > ::slotted(a) {
+        @apply --layout-vertical;
+        @apply --layout-center-center;
+
+        height: 100%;
+        width: 100%;
+        color: var(--disabled-color);
+        font-size: 12px;
+        text-decoration: none;
+        outline: none;
+        pointer-events: none;
+      }
+
+      :host(.iron-selected) > ::slotted(a) {
+        color: var(--primary-text-color);
+      }
+
+      :host(.touch-active) > ::slotted(a) {
+        color: rgba(255, 255, 255, 0.1);
       }
     </style>
 
@@ -35,8 +64,17 @@
 
       ready() {
         super.ready();
+        this.removeAttribute('unresolved');
+        this.anchor = this.querySelector('a');
         Polymer.Gestures.addListener(this, 'down', this._handleDown);
         Polymer.Gestures.addListener(this, 'up', this._handleUp);
+      }
+
+      clickLink() {
+        if (!!this.anchor) {
+          window.history.pushState({}, null, this.anchor.href);
+          window.dispatchEvent(new CustomEvent('location-changed'));
+        }
       }
 
       _handleDown() {

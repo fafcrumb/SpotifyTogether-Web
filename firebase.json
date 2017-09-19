@@ -3,8 +3,13 @@
     "rules": "database.rules.json"
   },
   "hosting": {
-    //"public": "/",
-    "public": "build/default",
+    "public": "/",
+    //"public": "build/default",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
     "rewrites": [
       {
         "source": "/functions/spotifyauth",

@@ -1,0 +1,47 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="lazy-import" href="../bower_components/paper-button/paper-button.html">
+
+<dom-module id="my-party">
+  <template>
+    <style>
+      :host {
+        display: block;
+        margin-top: 30px;
+      }
+
+      #pageContent {
+        text-align: center;
+      }
+    </style>
+
+    <div id="pageContent">
+      <paper-button raised on-tap="_leaveButtonClicked">Leave party</paper-button>
+    </div>
+
+  </template>
+
+  <script>
+    class MyParty extends Polymer.Element {
+
+      static get is() { return 'my-party'; }
+
+      static get properties() {
+        return {
+        };
+      }
+
+      ready() {
+        super.ready();
+        this.dispatchEvent(new CustomEvent('load-status', { detail: 'load-end', bubbles: true, composed: true }));
+      }
+
+      _leaveButtonClicked(e) {
+        SpotifyTogether.leaveParty();
+      }
+
+    }
+
+    window.customElements.define(MyParty.is, MyParty);
+  </script>
+</dom-module>

@@ -89,6 +89,10 @@
     _onEnterParty(partyId) {
       this._invokeEventCallbacks('party-enter', partyId);
     }
+
+    _onTracksDownloaded() {
+      this._invokeEventCallbacks('tracks-downloaded');
+    }
     
     _onNewTrack(snapshot, prevChildKey) {
       const track = snapshot.val();
@@ -174,6 +178,10 @@
           }
 
           this._onEnterParty(partyId);
+          this._trackRef.child(this._party).once('value', (snapshot) => {
+            this._onTracksDownloaded();
+          });
+
           this._trackRef.child(this._party).orderByChild('timestamp').on('child_added', (snapshot, prevChildKey) => {
             this._onNewTrack(snapshot, prevChildKey);
           });

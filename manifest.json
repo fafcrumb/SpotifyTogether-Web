@@ -1,7 +1,7 @@
 {
   "name": "Spotify Together",
   "short_name": "Together",
-  "start_url": "/?utm_source=homescreen",
+  "start_url": "index.html?utm_source=homescreen",
   "display": "standalone",
   "theme_color": "#212121",
   "background_color": "#303030",

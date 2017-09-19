@@ -9,11 +9,11 @@
     <style include="shared-styles">
       :host {
         display: block;
-        margin-left: 20px;
+        margin: 20px;
       }
 
       .trackContainer {
-        margin-bottom: 30px;
+        margin-bottom: 50px;
       }
     </style>
 
@@ -26,7 +26,6 @@
         initial-count="5"
         target-framerate="60">
 
-      <index id$="[[track.id]]"></index>
       <div class="trackContainer">
         <paper-checkbox
             checked="[[_computeChecked(track.votes)]]"
@@ -34,6 +33,11 @@
         [[_computeVoteCount(track.votes)]]
         [[track.name]] • [[track.artist]] • [[track.album]]
       </div>
+      <h1>CONTENT</h1>
+      <h1>CONTENT</h1>
+      <h1>CONTENT</h1>
+      <h1>CONTENT</h1>
+      <h1>CONTENT</h1>
     </template>
 
   </template>
@@ -47,6 +51,11 @@
         return {
           tracks: Array
         };
+      }
+
+      ready() {
+        super.ready();
+        this.dispatchEvent(new CustomEvent('load-status', { detail: 'load-end', bubbles: true, composed: true }));
       }
 
       _computeChecked(votes) {
