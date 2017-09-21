@@ -1,0 +1,33 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+
+<script>
+  class SpotifyTokenData extends Polymer.Element {
+
+    static get is() { return 'spotify-token-data'; }
+
+    static get properties() {
+      return {
+        accessToken: {
+          type: String,
+          notify: true
+        }
+      };
+    }
+
+  ready() {
+    super.ready();
+    SpotifyTogether.on('party-enter', this.__onPartyEnter.bind(this));
+  }
+
+  __onPartyEnter() {
+    SpotifyTogether.on('access-token', this.__onAccessToken.bind(this));
+  }
+
+  __onAccessToken(token) {
+    this.accessToken = token;
+  }
+
+  }
+
+  window.customElements.define(SpotifyTokenData.is, SpotifyTokenData);
+</script>

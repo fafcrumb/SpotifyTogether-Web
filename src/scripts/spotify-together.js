@@ -22,6 +22,7 @@
       this._partyRef = this._spotifyTogetherRef.child('party-metadata');
       this._trackRef = this._spotifyTogetherRef.child('party-tracks');
       this._partyCodeRef = this._spotifyTogetherRef.child('party-codes');
+      this._spotifyMetaDataRef = this._spotifyTogetherRef.child('spotify-api-metadata');
     }
 
     // Private
@@ -120,6 +121,11 @@
       this._invokeEventCallbacks('party-leave', partyId);
     }
 
+    _onSpotifyAccessToken(snapshot) {
+      const token = snapshot.val().access_token;
+      this._invokeEventCallbacks('access-token', token)
+    }
+
     // Public
     // ------
 
@@ -159,7 +165,13 @@
 
     enterParty(partyId) {
       return new Promise((resolve, reject) => {
-        this.getParty(partyId).then((party) => {
+        return Promise.resolve().then(() => {
+          if (!this._user) {
+            return firebase.auth().signInAnonymously();
+          }
+        }).then(() => {
+          return this.getParty(partyId);
+        }).then((party) => {
           if (!partyId || !party) return;
 
           // Cancel if we're already in this party.
@@ -170,12 +182,10 @@
 
           this._party = partyId;
 
-          if (this._user) {
-            const updates = {};
-            updates[`users/${this._userId}/party`] = partyId;
-            updates[`party-members/${this._party}/${this._userId}`] = true;
-            resolve(this._spotifyTogetherRef.update(updates));
-          }
+          const updates = {};
+          updates[`users/${this._userId}/party`] = partyId;
+          updates[`party-members/${this._party}/${this._userId}`] = true;
+          resolve(this._spotifyTogetherRef.update(updates));
 
           this._onEnterParty(partyId);
           this._trackRef.child(this._party).once('value', (snapshot) => {
@@ -196,6 +206,10 @@
 
           this._trackRef.child(this._party).orderByChild('timestamp').on('child_moved', (snapshot, prevChildKey) => {
             this._onMovedTrack(snapshot, prevChildKey);
+          });
+
+          this._spotifyMetaDataRef.child('clientCredentials').on('value', (snapshot) => {
+            this._onSpotifyAccessToken(snapshot);
           });
         });
       });

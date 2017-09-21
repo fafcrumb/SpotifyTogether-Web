@@ -18,6 +18,7 @@
 <link rel="import" href="firebase-scripts.html">
 <link rel="import" href="spotify-together-script.html">
 <link rel="import" href="tracks-data.html">
+<link rel="import" href="spotify-token-data.html">
 <link rel="import" href="my-join.html">
 <link rel="lazy-import" href="my-queue.html">
 <link rel="lazy-import" href="my-party.html">
@@ -193,17 +194,18 @@
     <app-header id="header" role="navigation" condenses reveals effects="waterfall">
       <app-toolbar id="toolbar">
         <div main-title>Spotify Together</div>
-        <paper-button raised hidden$="[[signedIn]]" on-tap="_login">Sign-in</paper-button>
-        <paper-button raised hidden$="[[!signedIn]]" on-tap="_logout">Logout</paper-button>
+        <paper-button raised hidden$="[[signedIn]]" on-tap="_login">SIGN-IN</paper-button>
+        <paper-button raised hidden$="[[!signedIn]]" on-tap="_logout">LOGOUT</paper-button>
       </app-toolbar>
     </app-header>
 
     <tracks-data queue="{{tracks}}" track-id-map="{{trackMap}}"></tracks-data>
+    <spotify-token-data access-token="{{token}}"></spotify-token-data>
     <iron-pages id="appPages" selected="[[page]]" attr-for-selected="name" fallback-selection="404" role="main">
       <my-join class="app-page" name="join"></my-join>
       <my-party class="app-page" name="party"></my-party>
       <my-queue class="app-page" name="queue" tracks="[[tracks]]"></my-queue>
-      <my-search class="app-page" name="search" track-map="[[trackMap]]"></my-search>
+      <my-search class="app-page" name="search" track-map="[[trackMap]]" access-token="[[token]]"></my-search>
       <my-404 class="app-page" name="404"></my-404>
     </iron-pages>
     
@@ -295,6 +297,7 @@
 
         window.performance && performance.mark && performance.mark('app.created');
 
+        // This listener needs to be added early to capture load events from page children
         this.addEventListener('load-status', (e) => this._onLoadStatus(e));
         this.loadedPages = {};
 
@@ -305,7 +308,10 @@
         };
         firebase.initializeApp(config);
         SpotifyTogether = new SpotifyTogether(firebase.database().ref());
-        this._handleRedirect();
+        this._handleRedirect().then(() => {
+          // Bind auth listener
+          firebase.auth().onAuthStateChanged(this.__onAuthStateChanged.bind(this));
+        });
       }
 
       connectedCallback() {
@@ -332,9 +338,7 @@
       }
 
       __onAuthStateChanged(user) {
-        if (!user) {
-          firebase.auth().signInAnonymously();
-        } else {
+        if (!!user) {
           SpotifyTogether.setUser(user.uid, user.displayName, user.isAnonymous).then((user) => {
             return SpotifyTogether.getUserParty();
           }).then((partyId) => {
@@ -343,25 +347,11 @@
             } else {
               this._partyStatusRedirect(null, this.page);
             }
-          }).then(() => {
-            this.dispatchEvent(new CustomEvent('load-status', {detail: 'load-end'}));
           });
+        } else {
+          this._partyStatusRedirect(null, this.page);
         }
-      }
-
-      __onUserUpdate(user) {
-        this.user = user;
-        this.signedIn = (!!user && !user.isAnonymous);
-      }
-
-      __onEnterParty(partyId) {
-        this._partyStatusRedirect(partyId, this.page);
-        this.partyId = partyId;
-      }
-
-      __onLeaveParty(partyId) {
-        this._partyStatusRedirect(null, this.page);
-        this.partyId = null;
+        this.dispatchEvent(new CustomEvent('load-status', { detail: 'load-end' }));
       }
 
       _routePageChanged(page) {
@@ -370,20 +360,6 @@
           return;
         }
         this.page = page || 'join';
-      }
-
-      _partyStatusRedirect(partyId, page) {
-        if (partyId === undefined) return true;
-        if (!!partyId) {
-          if (page === 'join') {
-            this.set('route.path', 'queue');
-            return true;
-          }
-        } else if (this.pages.includes(page) && page !== 'join') {
-          this.set('route.path', 'join');
-          return true;
-        }
-        return false;
       }
 
       _pageChanged(page, oldPage) {
@@ -430,6 +406,20 @@
             }, null, true);
           });
         }
+      }
+
+      _partyStatusRedirect(partyId, page) {
+        if (partyId === undefined) return true;
+        if (!!partyId) {
+          if (page === 'join') {
+            this.set('route.path', 'queue');
+            return true;
+          }
+        } else if (this.pages.includes(page) && page !== 'join') {
+          this.set('route.path', 'join');
+          return true;
+        }
+        return false;
       }
 
       _notifyNetworkStatus() {
@@ -511,9 +501,6 @@
           }).catch((err) => {
             console.log('Error switching parties', err.message);
           });
-        }).then(() => {
-          // Bind listener
-          firebase.auth().onAuthStateChanged(this.__onAuthStateChanged.bind(this));
         });
       }
 
@@ -532,8 +519,24 @@
         this.page = '404';
       }
 
+      __onUserUpdate(user) {
+        this.user = user;
+        this.signedIn = (!!user && !user.isAnonymous);
+      }
+
+      __onEnterParty(partyId) {
+        this._partyStatusRedirect(partyId, this.page);
+        this.partyId = partyId;
+      }
+
+      __onLeaveParty(partyId) {
+        this._partyStatusRedirect(null, this.page);
+        this.partyId = null;
+      }
+
       _onLoadStatus(event) {
         event.detail === 'load-start' ? this._loadStatus++ : this._loadStatus--;
+        this._loadStatus = this._loadStatus < 0 ? 0 : this._loadStatus;
         this.loading = (this._loadStatus > 0);
       }
 
@@ -544,12 +547,6 @@
 
       _computeOverlayClass(loading) {
         return loading ? '' : 'hidden';
-      }
-
-      _computeLoading(...args) {
-        // Returns true if at least one argument is false
-        //return args.some((el) => !el);
-        return false;
       }
 
     }

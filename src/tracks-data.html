@@ -27,13 +27,14 @@
 
     ready() {
       super.ready();
-      SpotifyTogether.on('tracks-downloaded', this.__onTracksDownloaded.bind(this));
       SpotifyTogether.on('party-enter', this.__onPartyEnter.bind(this));
       SpotifyTogether.on('party-leave', this.__onPartyLeave.bind(this));
+      SpotifyTogether.on('tracks-downloaded', this.__onTracksDownloaded.bind(this));
       SpotifyTogether.on('track-add', this.__onTrackAdd.bind(this));
       SpotifyTogether.on('track-remove', this.__onTrackRemove.bind(this));
       SpotifyTogether.on('track-change', this.__onTrackChange.bind(this));
       SpotifyTogether.on('track-move', this.__onTrackMove.bind(this));
+      
     }
 
     __onTracksDownloaded() {

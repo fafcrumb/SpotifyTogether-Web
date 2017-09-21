@@ -17,6 +17,9 @@ module.exports = {
     '/manifest.json',
     '/bower_components/webcomponentsjs/webcomponents-loader.js',
   ],
+  dynamicUrlToDependencies: {
+    '/': ['index.html']
+  },
   runtimeCaching: [
     {
       urlPattern: /\/bower_components\/webcomponentsjs\/.*.js/,
@@ -28,11 +31,21 @@ module.exports = {
       }
     },
     {
-      urlPattern: /https:\/\/www.gstatic.com\/firebasejs\/*\/firebase-*.js/,
+      urlPattern: /^https:\/\/www\.gstatic\.com\/firebasejs\/4\.3\.1/,
+      handler: 'cacheFirst',
+      options: {
+        cache: {
+          name: 'firebase-scripts-cache-v4.3.1'
+        }
+      }
+    },
+    {
+      urlPattern: /^https:\/\/api\.spotify\.com\/v1\/search/,
       handler: 'fastest',
       options: {
         cache: {
-          name: 'firebase-scripts-cache'
+          name: 'spotify-search-cache-v1',
+          maxEntries: 200
         }
       }
     }

@@ -29,6 +29,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       #searchResults {
         opacity: 1;
         transition: opacity 0.4s;
+        will-change: opacity;
       }
 
       #searchResults.hidden {
@@ -49,11 +50,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
     </style>
 
-    <firebase-document
-        id="fbSpotifyTokenDoc"
-        path="/spotify-api-metadata/clientCredentials"
-        data="{{_spotifyCredentials}}"></firebase-document>
-
     <iron-ajax
         id="authTokenFunction"
         url="/functions/spotifyauth"
@@ -63,7 +59,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <iron-ajax
         id="searchApi"
         url="https://api.spotify.com/v1/search"
-        headers$='{"Authorization": "Bearer [[_spotifyToken]]"}'
+        headers$='{"Authorization": "Bearer [[accessToken]]"}'
         params$='{"q":"[[_computeQuery(_searchQuery)]]", "limit":"10", "type":"track", "market":"US"}'
         handle-as="json"
         last-response="{{_response}}"
@@ -116,8 +112,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       static get properties() {
         return {
           trackMap: Object,
-          _spotifyCredentials: Object,
-          _spotifyToken: String,
+          accessToken: String,
           _searchQuery: String,
         }
       }
@@ -129,11 +124,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       static get observers() {
         return [
-          '_spotifyCredentialsChanged(_spotifyCredentials.access_token)',
           '_trackMapChanged(trackMap.*)'
         ]
       }
 
+      // Listens for added tracks and updates 'added' state in UI model
       _trackMapChanged(trackMapSplices) {
         const trackRepeat = this.$.trackRepeat;
         const track = trackMapSplices.value;
@@ -162,10 +157,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         return !!this.trackMap[trackId];
       }
 
-      _spotifyCredentialsChanged(token) {
-        this._spotifyToken = token || '';
-      }
-
       _computeQuery(query) {
         // Check if last 2 characters of query are alphanumueric,
         // and if so, add wildcard to query. Wildcard can produce errors
@@ -192,12 +183,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           return;
         }
 
-        this._launchSearch(this._searchQuery, this._spotifyToken).catch((err) => {
+        this._launchSearch(this._searchQuery, this.accessToken).catch((err) => {
           if (err.message === 'No token provided' || 
              (err.message === 'The access token expired' && err.status === 401)) {
             return this._getAuthToken().then((response) => {
-              this._spotifyToken = response;
-              return this._launchSearch(this._searchQuery, this._spotifyToken);
+              this.accessToken = response;
+              return this._launchSearch(this._searchQuery, this.accessToken);
             });
           }
         }).catch((err) => {
@@ -205,6 +196,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
       }
 
+      // Call cloud function to generate new token
       _getAuthToken() {
         return new Promise((resolve, reject) => {
           this.$.authTokenFunction.generateRequest().completes.then((req) => {
@@ -226,7 +218,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           this.$.searchApi.generateRequest().completes.then((req) => {
             resolve(req.response);
           }).catch((err) => {
-            reject(err.request.response.error);
+            const networkError = {message: 'Network Error', status: 0};
+            const error = !!err.request.response ? err.request.response.error : networkError;
+            reject(error);
           });
         });
       }
